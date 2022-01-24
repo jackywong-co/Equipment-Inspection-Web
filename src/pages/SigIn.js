@@ -6,21 +6,46 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
-
+import axios from 'axios';
+// import axiosInstance from "../axiosApi";
 const theme = createTheme();
 
-
+const baseURL = "http://127.0.0.1:8000/api/";
 
 function SigIn() {
     const handleSubmit = (event) => {
         event.preventDefault();
         const data = new FormData(event.currentTarget);
-        // eslint-disable-next-line no-console
-        console.log({
-            username: data.get('username'),
-            password: data.get('password'),
-        });
-    };
+        // localStorage.setItem('username', data.get('username'))
+        // localStorage.setItem('password', data.get('password'))
+
+        // fetch
+        const jdata = {
+            "username": data.get('username'),
+            "password": data.get('password')
+        };
+
+        fetch('http://127.0.0.1:8000/api/login/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(jdata)
+        })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Success:', data);
+                console.log('access:', data['access']);
+                localStorage.setItem('refresh_token', data['refresh'])
+                localStorage.setItem('access_token', data['access'])
+
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+
+
+
+
+    }
 
     return (
         <ThemeProvider theme={theme}>
