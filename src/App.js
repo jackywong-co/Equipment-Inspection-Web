@@ -2,7 +2,7 @@ import {
   Routes,
   Route
 } from "react-router-dom";
-import SigIn from "./pages/SigIn";
+import Login from "./pages/Login";
 import SPage from "./pages/SPage";
 
 
@@ -10,8 +10,8 @@ function App() {
   return (
     <div className="App">
       <Routes>
-        <Route path="/" element={<SigIn />} />
-        <Route path="s" element={<SPage />} />
+        <Route path="/s" element={<Login />} />
+        <Route path="/" element={<SPage />} />
       </Routes>
     </div>
 

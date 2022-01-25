@@ -6,18 +6,24 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
-import axios from 'axios';
+import axiosInstance from '';
+import jwtDecode from 'jwt-decode';
 // import axiosInstance from "../axiosApi";
 const theme = createTheme();
 
-const baseURL = "http://127.0.0.1:8000/api/";
-
 function SigIn() {
+    const initialFormDate = Object.freeze({
+        username:'',
+        password:'',
+    });
+
     const handleSubmit = (event) => {
         event.preventDefault();
         const data = new FormData(event.currentTarget);
         // localStorage.setItem('username', data.get('username'))
         // localStorage.setItem('password', data.get('password'))
+        // axios
+        axiosInstance
 
         // fetch
         const jdata = {
@@ -34,14 +40,21 @@ function SigIn() {
             .then(data => {
                 console.log('Success:', data);
                 console.log('access:', data['access']);
+                
+                const decodedToken = jwtDecode(data['access'])
+                console.log('decodedToken:', decodedToken);
+               
                 localStorage.setItem('refresh_token', data['refresh'])
                 localStorage.setItem('access_token', data['access'])
+
 
             })
             .catch((error) => {
                 console.error('Error:', error);
             });
 
+
+        
 
 
 
