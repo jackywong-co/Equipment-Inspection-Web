@@ -1,7 +1,7 @@
 
 import * as React from 'react';
 import { useNavigate } from "react-router-dom";
-import axiosInstance from '../components/axios';
+import axiosInstance from '../services/axios';
 
 // mui
 import Button from '@mui/material/Button';
