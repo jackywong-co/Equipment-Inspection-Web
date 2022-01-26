@@ -10,12 +10,11 @@ import TextField from '@mui/material/TextField';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
-import { createTheme, ThemeProvider } from '@mui/material/styles';
 
 
 
 
-const theme = createTheme();
+
 
 function Login() {
     const navigate = useNavigate();
@@ -44,7 +43,7 @@ function Login() {
     }
 
     return (
-        <ThemeProvider theme={theme}>
+       
         <Container component="main" maxWidth="xs">
             <CssBaseline />
             <Box
@@ -90,7 +89,7 @@ function Login() {
                 </Box>
             </Box>
         </Container>
-    </ThemeProvider>
+    
     );
 }
 
