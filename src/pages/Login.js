@@ -1,7 +1,7 @@
 
 import * as React from 'react';
 import { useNavigate } from "react-router-dom";
-import axiosInstance from '../services/axios';
+import axiosInstance from '../services/axios.instance';
 
 // mui
 import Button from '@mui/material/Button';
@@ -22,29 +22,37 @@ function Login() {
     const handleSubmit = (event) => {
         event.preventDefault();
         const data = new FormData(event.currentTarget);
-         // axios
-         axiosInstance.post('login/',{
-            username: data.get('username'),
-            password: data.get('password')
-         }).then((result) => {
-             localStorage.setItem('access_token', result.data.access);
-             localStorage.setItem('refresh_token', result.data.refresh);
-             axiosInstance.defaults.headers['Aythorization'] = 'JWT' + localStorage.getItem('access_token');
-             navigate('/');
-             console.log({
-                result
-              });
-        });
-        
+        // axios
+        axiosInstance
+            .post('login/', {
+                username: data.get('username'),
+                password: data.get('password')
+            })
+            .then((result) => {
+                localStorage.setItem('access_token', result.data.access);
+                localStorage.setItem('refresh_token', result.data.refresh);
+                axiosInstance.defaults.headers['Aythorization'] = 'JWT' + localStorage.getItem('access_token');
+                navigate('/');
+                console.log({
+                    result
+                });
+            })
+            .catch((error) => {
+                console.log("")
+                console.log(error)
+            });
+
         console.log({
             username: data.get('username'),
             password: data.get('password')
-          });
+        });
     }
 
     return (
-       
+
         <Container component="main" maxWidth="xs">
+
+
             <CssBaseline />
             <Box
                 sx={{
@@ -75,9 +83,12 @@ function Login() {
                         name="password"
                         label="Password"
                         type="password"
+                        // error
+                        helperText = ""
                         id="password"
                         autoComplete="current-password"
                     />
+                    
                     <Button
                         type="submit"
                         fullWidth
@@ -89,7 +100,7 @@ function Login() {
                 </Box>
             </Box>
         </Container>
-    
+
     );
 }
 

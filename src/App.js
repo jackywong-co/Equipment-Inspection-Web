@@ -7,6 +7,8 @@ import Dashboard from "./pages/Dashboard";
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { useEffect } from "react";
 
+import Header from "./components/Header"
+
 const theme = createTheme({
   // typography: {
   //   fontFamily: 'Raleway, Arial',
@@ -14,7 +16,8 @@ const theme = createTheme({
 });
 
 function checkToken(token){
-
+  console.log("hi")
+    console.log(token)
 }
 
 function App() {
@@ -23,7 +26,9 @@ function App() {
     
       <div className="App">
         <ThemeProvider theme={theme}>
+        <Header/>
         <Routes>
+        
           <Route path="/Login" element={<Login />} />
           <Route path="/" element={<Dashboard />} />
         </Routes>
