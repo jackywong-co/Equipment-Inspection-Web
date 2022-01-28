@@ -27,7 +27,7 @@ const validationSchema = yup.object({
 
 function Login() {
     const navigate = useNavigate();
-    const [errorDisplay, setErrorDisplay] = React.useState(false);
+    const [displayErrorMessage, setErrorDisplay] = React.useState(false);
 
     const formik = useFormik({
         initialValues: {
@@ -46,15 +46,15 @@ function Login() {
                 .then((result) => {
                     localStorage.setItem('access_token', result.data.access);
                     localStorage.setItem('refresh_token', result.data.refresh);
-                    axiosInstance.defaults.headers['Aythorization'] = 'JWT' + localStorage.getItem('access_token');
                     navigate('/');
                     console.log({
                         result
                     });
-                })
+                })           
                 .catch((error) => {
                     console.log("eorror")
                     console.log(error.response.status)
+                    console.log(error.response.data)
                     if (error.response.status = 401) {
                         console.log("401 eorror")
                         setErrorDisplay(true)
@@ -122,7 +122,7 @@ function Login() {
 
                         autoComplete="current-password"
                     />
-                    {errorDisplay && <Alert severity="error">Account not found</Alert>}
+                    {displayErrorMessage && <Alert severity="error">Account not found</Alert>}
 
                     <Button
                         type="submit"
