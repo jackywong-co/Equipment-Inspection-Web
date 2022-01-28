@@ -10,48 +10,68 @@ import TextField from '@mui/material/TextField';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
+import Alert from '@mui/material/Alert';
+import { useFormik } from 'formik';
+import * as yup from 'yup';
 
-
-
-
+const validationSchema = yup.object({
+    username: yup
+        .string('Enter your username')
+        .required('Username is required'),
+    password: yup
+        .string('Enter your password')
+        // .min(8, 'Password should be of minimum 8 characters length'),
+        .required('Password is required'),
+});
 
 
 function Login() {
     const navigate = useNavigate();
+    const [errorDisplay, setErrorDisplay] = React.useState(false);
 
-    
+    const formik = useFormik({
+        initialValues: {
+            username: '',
+            password: '',
+        },
+        validationSchema: validationSchema,
+        onSubmit: (values) => {
 
 
-    
-
-    const handleSubmit = (event) => {
-        event.preventDefault();
-        const data = new FormData(event.currentTarget);
-        // axios
-        axiosInstance
-            .post('login/', {
-                username: data.get('username'),
-                password: data.get('password')
-            })
-            .then((result) => {
-                localStorage.setItem('access_token', result.data.access);
-                localStorage.setItem('refresh_token', result.data.refresh);
-                axiosInstance.defaults.headers['Aythorization'] = 'JWT' + localStorage.getItem('access_token');
-                navigate('/');
-                console.log({
-                    result
+            axiosInstance
+                .post('login/', {
+                    username: values.username,
+                    password: values.password
+                })
+                .then((result) => {
+                    localStorage.setItem('access_token', result.data.access);
+                    localStorage.setItem('refresh_token', result.data.refresh);
+                    axiosInstance.defaults.headers['Aythorization'] = 'JWT' + localStorage.getItem('access_token');
+                    navigate('/');
+                    console.log({
+                        result
+                    });
+                })
+                .catch((error) => {
+                    console.log("eorror")
+                    console.log(error.response.status)
+                    if (error.response.status = 401) {
+                        console.log("401 eorror")
+                        setErrorDisplay(true)
+                    }
                 });
-            })
-            .catch((error) => {
-                console.log("")
-                console.log(error)
+
+            console.log({
+                username: values.username,
+                password: values.password
             });
 
-        console.log({
-            username: data.get('username'),
-            password: data.get('password')
-        });
-    }
+
+
+
+        },
+    });
+
 
     return (
 
@@ -59,6 +79,7 @@ function Login() {
 
 
             <CssBaseline />
+
             <Box
                 sx={{
                     marginTop: 8,
@@ -70,7 +91,8 @@ function Login() {
                 <Typography component="h1" variant="h5">
                     Sign in
                 </Typography>
-                <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
+                <form onSubmit={formik.handleSubmit} noValidate sx={{ mt: 1 }}>
+
                     <TextField
                         margin="normal"
                         required
@@ -79,6 +101,10 @@ function Login() {
                         label="Username"
                         name="username"
                         autoComplete="username"
+                        value={formik.values.username}
+                        onChange={formik.handleChange}
+                        error={formik.touched.username && Boolean(formik.errors.username)}
+                        helperText={formik.touched.username && formik.errors.username}
                         autoFocus
                     />
                     <TextField
@@ -88,12 +114,16 @@ function Login() {
                         name="password"
                         label="Password"
                         type="password"
-                        // error
-                        helperText = ""
                         id="password"
+                        value={formik.values.password}
+                        onChange={formik.handleChange}
+                        error={formik.touched.password && Boolean(formik.errors.password)}
+                        helperText={formik.touched.password && formik.errors.password}
+
                         autoComplete="current-password"
                     />
-                    
+                    {errorDisplay && <Alert severity="error">Account not found</Alert>}
+
                     <Button
                         type="submit"
                         fullWidth
@@ -102,8 +132,10 @@ function Login() {
                     >
                         Sign In
                     </Button>
-                </Box>
+
+                </form>
             </Box>
+
         </Container>
 
     );
