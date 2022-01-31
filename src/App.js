@@ -1,42 +1,21 @@
-import {
-  Routes,
-  Route
-} from "react-router-dom";
+import { Routes, Route, useNavigate } from "react-router-dom";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
-import { createTheme, ThemeProvider } from '@mui/material/styles';
-import { useEffect } from "react";
-
+import { ThemeProvider } from '@mui/material/styles';
 import Header from "./components/Header"
 
-const theme = createTheme({
-  // typography: {
-  //   fontFamily: 'Raleway, Arial',
-  // },
-});
-
-function checkToken(token){
-  console.log("hi")
-    console.log(token)
-}
-
 function App() {
-  useEffect(()=> checkToken(localStorage.getItem('access_token')))
   return (
-    
-      <div className="App">
-        <ThemeProvider theme={theme}>
-        <Header/>
+    <div className="App">
+      <ThemeProvider>
+        <Header />
         <Routes>
-        
           <Route path="/Login" element={<Login />} />
           <Route path="/" element={<Dashboard />} />
         </Routes>
-        </ThemeProvider>
-      </div>
-    
+      </ThemeProvider>
+    </div>
   );
 }
 
 export default App;
- 

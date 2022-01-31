@@ -1,5 +1,18 @@
 
+
+import { useNavigate } from "react-router-dom";
+
+
 function Dashboard() {
+
+    const navigate = useNavigate();
+    // useEffect(() => {
+    //     localStorage.removeItem('access_token')
+    //     navigate('/login')
+
+
+    // })
+
     return (
         <div>
 
@@ -12,3 +25,6 @@ function Dashboard() {
 
     );
 }
+
+
+export default Dashboard;
