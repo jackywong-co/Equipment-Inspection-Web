@@ -1,8 +1,22 @@
-
-
+import AuthContext from "../../../services/auth.context";
+import React, { useContext, useState } from 'react';
+import { useNavigate } from "react-router-dom";
+import axiosInstance from '../../../services/axios.instance';
+// mui
+import Button from '@mui/material/Button';
+import CssBaseline from '@mui/material/CssBaseline';
+import TextField from '@mui/material/TextField';
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
+import Container from '@mui/material/Container';
+import Alert from '@mui/material/Alert';
+import { useFormik } from 'formik';
+import * as yup from 'yup';
 
 const LoginForm = () => {
     const navigate = useNavigate();
+    // const [displayErrorMessage, setErrorDisplay] = React.useState(false);
+
     const authCtx = useContext(AuthContext);
 
     const validationSchema = yup.object({
@@ -20,6 +34,13 @@ const LoginForm = () => {
         },
         validationSchema: validationSchema,
         onSubmit: (values) => {
+
+            const enteredUsername = values.username
+            const enteredPassword = values.password
+
+
+
+
             axiosInstance
                 .post('login/', {
                     username: values.username,
@@ -28,11 +49,14 @@ const LoginForm = () => {
                 .then((result) => {
                     localStorage.setItem('access_token', result.data.access);
                     localStorage.setItem('refresh_token', result.data.refresh);
+
+                    authCtx.login(result.data.access)
+
                     navigate('/');
                     console.log({
                         result
                     });
-                })           
+                })
                 .catch((error) => {
                     console.log("eorror")
                     console.log(error.response.status)
@@ -90,6 +114,7 @@ const LoginForm = () => {
                         helperText={formik.touched.password && formik.errors.password}
                         autoComplete="current-password"
                     />
+                    {/* {displayErrorMessage && <Alert severity="error">Account not found</Alert>} */}
                     <Button
                         type="submit"
                         fullWidth

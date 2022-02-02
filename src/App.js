@@ -1,13 +1,17 @@
 import { Routes, Route, useNavigate } from "react-router-dom";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
-import { ThemeProvider } from '@mui/material/styles';
+import { createTheme, ThemeProvider } from '@mui/material/styles';
 import Header from "./components/Header"
 
+
 function App() {
+
+  const theme = createTheme();
+
   return (
     <div className="App">
-      <ThemeProvider>
+      <ThemeProvider theme={theme}>
         <Header />
         <Routes>
           <Route path="/Login" element={<Login />} />

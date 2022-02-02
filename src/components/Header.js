@@ -5,10 +5,13 @@ import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 
 import LogoutButton from './LogoutButton';
+import AuthContext from '../services/auth.context';
 
 function Header() {
 
-    
+    const authCtx = React.useContext(AuthContext);
+
+    const isLoggedIn = authCtx.isLoggedIn;
 
     return (
         <Box >
@@ -19,7 +22,11 @@ function Header() {
                     <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
 
                     </Typography>
-                   <LogoutButton/>
+
+                    {isLoggedIn && (
+                        <LogoutButton />
+                    )
+                    }
                 </Toolbar>
             </AppBar>
         </Box>
