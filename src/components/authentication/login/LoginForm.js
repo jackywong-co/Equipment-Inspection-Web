@@ -12,10 +12,11 @@ import Container from '@mui/material/Container';
 import Alert from '@mui/material/Alert';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
-
+// jwt
+import jwt_decode from "jwt-decode";
 const LoginForm = () => {
     const navigate = useNavigate();
-    // const [displayErrorMessage, setErrorDisplay] = React.useState(false);
+    const [displayErrorMessage, setErrorDisplay] = React.useState(false);
 
     const authCtx = useContext(AuthContext);
 
@@ -34,28 +35,17 @@ const LoginForm = () => {
         },
         validationSchema: validationSchema,
         onSubmit: (values) => {
-
-            const enteredUsername = values.username
-            const enteredPassword = values.password
-
-
-
-
             axiosInstance
                 .post('login/', {
                     username: values.username,
                     password: values.password
                 })
                 .then((result) => {
-                    localStorage.setItem('access_token', result.data.access);
-                    localStorage.setItem('refresh_token', result.data.refresh);
+                    const decodedToken = jwt_decode(result.data.access)
+                    const expirationTime = decodedToken.exp - decodedToken.iat
 
-                    authCtx.login(result.data.access)
-
+                    authCtx.login(result.data.access, expirationTime)
                     navigate('/');
-                    console.log({
-                        result
-                    });
                 })
                 .catch((error) => {
                     console.log("eorror")
@@ -64,6 +54,7 @@ const LoginForm = () => {
                     if (error.response.status = 401) {
                         console.log("401 eorror")
                     }
+                    setErrorDisplay(true)
                 });
             console.log({
                 username: values.username,
@@ -114,7 +105,7 @@ const LoginForm = () => {
                         helperText={formik.touched.password && formik.errors.password}
                         autoComplete="current-password"
                     />
-                    {/* {displayErrorMessage && <Alert severity="error">Account not found</Alert>} */}
+                    {displayErrorMessage && <Alert severity="error">Account not found</Alert>}
                     <Button
                         type="submit"
                         fullWidth

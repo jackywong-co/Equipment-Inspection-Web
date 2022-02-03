@@ -1,15 +1,18 @@
-import React from 'react';
 import ReactDOM from 'react-dom';
-import './index.css';
+
 import App from './App';
+
 import { BrowserRouter } from "react-router-dom";
+import { HelmetProvider } from 'react-helmet-async';
 import { AuthContextProvider } from './services/auth.context';
 
 ReactDOM.render(
   <AuthContextProvider>
-  <BrowserRouter>
-    <App />
-  </BrowserRouter>
+    <HelmetProvider>
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
+    </HelmetProvider>,
   </AuthContextProvider>,
   document.getElementById('root')
 );
