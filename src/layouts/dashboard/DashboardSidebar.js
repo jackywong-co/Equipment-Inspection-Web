@@ -9,9 +9,10 @@ import Logo from '../../components/Logo';
 import Scrollbar from '../../components/Scrollbar';
 import NavSection from '../../components/NavSection';
 import { MHidden } from '../../components/@material-extend';
-//
+
 import sidebarConfig from './SidebarConfig';
-import account from '../../_mocks_/account';
+
+import jwtDecode from 'jwt-decode';
 
 // ----------------------------------------------------------------------
 
@@ -39,7 +40,25 @@ DashboardSidebar.propTypes = {
   onCloseSidebar: PropTypes.func
 };
 
+const accountHandler = (token) => {
+  const decodedToken = jwtDecode(token);
+  let role;
+  if (decodedToken.is_staff) {
+    role = 'Manager';
+  } else {
+    role = "Checker"
+  }
+
+  return {
+    username: decodedToken.username,
+    role: role,
+    photoURL: '/static/user.png'
+  };
+}
+
 export default function DashboardSidebar({ isOpenSidebar, onCloseSidebar }) {
+  const account = accountHandler(localStorage.getItem('token'))
+
   const { pathname } = useLocation();
 
   useEffect(() => {
@@ -68,7 +87,7 @@ export default function DashboardSidebar({ isOpenSidebar, onCloseSidebar }) {
             <Avatar src={account.photoURL} alt="photoURL" />
             <Box sx={{ ml: 2 }}>
               <Typography variant="subtitle2" sx={{ color: 'text.primary' }}>
-                {account.displayName}
+                {account.username}
               </Typography>
               <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                 {account.role}

@@ -1,7 +1,7 @@
-import AuthContext from "../../../services/auth.context";
 import React, { useContext, useState } from 'react';
 import { useNavigate } from "react-router-dom";
 import axiosInstance from '../../../services/axios.instance';
+import AuthContext from "../../../services/auth.context";
 // mui
 import Button from '@mui/material/Button';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -14,6 +14,7 @@ import { useFormik } from 'formik';
 import * as yup from 'yup';
 // jwt
 import jwt_decode from "jwt-decode";
+
 const LoginForm = () => {
     const navigate = useNavigate();
     const [displayErrorMessage, setErrorDisplay] = React.useState(false);
@@ -42,9 +43,10 @@ const LoginForm = () => {
                 })
                 .then((result) => {
                     const decodedToken = jwt_decode(result.data.access)
+                    console.log('decodedToken : ' + { decodedToken })
                     const expirationTime = decodedToken.exp - decodedToken.iat
-
-                    authCtx.login(result.data.access, expirationTime)
+                    console.log('expiration' + expirationTime)
+                    authCtx.login(result.data.access, expirationTime * 1000)
                     navigate('/');
                 })
                 .catch((error) => {

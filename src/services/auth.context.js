@@ -10,10 +10,8 @@ const AuthContext = React.createContext({
 });
 
 const calculateRemainingTime = (expirationTime) => {
-  const currentTime = new Date().getTime();
-  const adjExpirationTime = new Date(expirationTime).getTime();
 
-  const remainingDuration = adjExpirationTime - currentTime;
+  const remainingDuration = expirationTime;
 
   return remainingDuration;
 };
@@ -24,7 +22,7 @@ const retrieveStoredToken = () => {
 
   const remainingTime = calculateRemainingTime(storedExpirationDate);
 
-  if (remainingTime <= 3600) {
+  if (remainingTime <= 0) {
     localStorage.removeItem('token');
     localStorage.removeItem('expirationTime');
     return null;
@@ -64,14 +62,14 @@ export const AuthContextProvider = (props) => {
     localStorage.setItem('expirationTime', expirationTime);
 
     const remainingTime = calculateRemainingTime(expirationTime);
-
+    
     logoutTimer = setTimeout(logoutHandler, remainingTime);
   };
 
   useEffect(() => {
     if (tokenData) {
       console.log(tokenData.duration);
-      logoutTimer = setTimeout(logoutHandler, tokenData.duration);
+      logoutTimer =  (logoutHandler, tokenData.duration);
     }
   }, [tokenData, logoutHandler]);
 

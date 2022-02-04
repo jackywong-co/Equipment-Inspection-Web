@@ -1,5 +1,5 @@
 import { Icon } from '@iconify/react';
-import { useRef, useState } from 'react';
+import { useContext, useRef, useState } from 'react';
 
 import homeFill from '@iconify/icons-eva/home-fill';
 import personFill from '@iconify/icons-eva/person-fill';
@@ -11,7 +11,8 @@ import { Button, Box, Divider, MenuItem, Typography, Avatar, IconButton } from '
 // components
 import MenuPopover from '../../components/MenuPopover';
 //
-import account from '../../_mocks_/account';
+import LogoutButton from '../../components/Header/Button/LogoutButton';
+import jwtDecode from 'jwt-decode';
 
 // ----------------------------------------------------------------------
 
@@ -21,21 +22,39 @@ const MENU_OPTIONS = [
     icon: homeFill,
     linkTo: '/'
   },
-  {
-    label: 'Profile',
-    icon: personFill,
-    linkTo: '#'
-  },
-  {
-    label: 'Settings',
-    icon: settings2Fill,
-    linkTo: '#'
-  }
+  // {
+  //   label: 'Profile',
+  //   icon: personFill,
+  //   linkTo: '#'
+  // },
+  // {
+  //   label: 'Settings',
+  //   icon: settings2Fill,
+  //   linkTo: '#'
+  // }
 ];
 
 // ----------------------------------------------------------------------
 
+const accountHandler = (token) => {
+  const decodedToken = jwtDecode(token);
+  let role;
+  if (decodedToken.is_staff) {
+    role = 'Manager';
+  } else {
+    role = "Checker"
+  }
+
+  return {
+    username: decodedToken.username,
+    role: role,
+    photoURL: '/static/user.png'
+  };
+}
+
+
 export default function AccountPopover() {
+  const account = accountHandler(localStorage.getItem('token'))
   const anchorRef = useRef(null);
   const [open, setOpen] = useState(false);
 
@@ -79,10 +98,10 @@ export default function AccountPopover() {
       >
         <Box sx={{ my: 1.5, px: 2.5 }}>
           <Typography variant="subtitle1" noWrap>
-            {account.displayName}
+            {account.username}
           </Typography>
           <Typography variant="body2" sx={{ color: 'text.secondary' }} noWrap>
-            {account.email}
+            {account.role}
           </Typography>
         </Box>
 
@@ -111,9 +130,7 @@ export default function AccountPopover() {
         ))}
 
         <Box sx={{ p: 2, pt: 1.5 }}>
-          <Button fullWidth color="inherit" variant="outlined">
-            Logout
-          </Button>
+          <LogoutButton />
         </Box>
       </MenuPopover>
     </>

@@ -9,9 +9,7 @@ function LogoutButton() {
     authCtx.logout();
   };
   return (
-    <Box>
-      <Button color="inherit" onClick={logoutHandler}>Logout</Button>
-    </Box>
+    <Button fullWidth color="inherit" variant="outlined" onClick={logoutHandler}>Logout</Button>
   );
 }
 
