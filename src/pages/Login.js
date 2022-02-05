@@ -1,8 +1,10 @@
 import LoginForm from "../components/authentication/login/LoginForm";
-
+import Page from '../components/Page';
 function Login() {
   return (
-    <LoginForm />
+    <Page title="Login">
+      <LoginForm />
+    </Page>
   );
 }
 
