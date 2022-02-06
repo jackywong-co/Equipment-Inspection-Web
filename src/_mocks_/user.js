@@ -4,12 +4,28 @@ import { sample } from 'lodash';
 import { mockImgAvatar } from '../utils/mockImages';
 
 // ----------------------------------------------------------------------
+import axiosInstance from '../services/axios.instance';
+axiosInstance
+  .get('user/')
+  .then((response) => {
+    console.log(response);
+    const USERLIST = response.data.map((userData) => {
+      return {
+        id: userData.id,
+        name: userData.username,
+        role: (userData.is_staff) ? ("Manager") : ("Checker")
+      };
+    })
 
-const users = [...Array(1)].map((_, index) => ({
+
+  })
+
+
+const users = [...Array(5)].map((_, index) => ({
   id: '12',
   avatarUrl: '/static/user.png/',
-  name: 'faker.name.findName()', 
-  status: sample(['active', 'banned']), 
+  name: 'faker.name.findName()',
+  status: sample(['active', 'banned']),
   role: sample([
     'Leader',
     'Hr Manager',

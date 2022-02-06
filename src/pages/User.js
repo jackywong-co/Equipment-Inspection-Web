@@ -27,26 +27,16 @@ import Scrollbar from '../components/Scrollbar';
 import SearchNotFound from '../components/SearchNotFound';
 import { UserListHead, UserListToolbar, UserMoreMenu } from '../components/_dashboard/user';
 //
-import USERLIST from '../_mocks_/user';
+// import USERLIST from '../_mocks_/user';
 //
-import axiosInstance from '../services/axios.instance';
+
 import axios from 'axios';
 // ----------------------------------------------------------------------
 
-const userHandler = (token) => {
-  axios({
-    method: 'get',
-    url: 'http://127.0.0.1:8000/api/user/',
-    headers: {
-      Authorization: 'JWT ' + localStorage.getItem('token') ,
-      'Content-Type': 'application/json',
-      accept: 'application/json',
-    }
-  }).then(function (response) {
-    console.log(response.data)
-  });
+// const userHandler = () => {
+  
 
-}
+// }
 
 const TABLE_HEAD = [
   { id: 'name', label: 'Name', alignRight: false },
@@ -95,8 +85,6 @@ export default function User() {
   const [orderBy, setOrderBy] = useState('name');
   const [filterName, setFilterName] = useState('');
   const [rowsPerPage, setRowsPerPage] = useState(5);
-  const user = userHandler(localStorage.getItem('token'));
-
 
 
 
