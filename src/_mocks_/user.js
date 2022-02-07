@@ -5,26 +5,30 @@ import { mockImgAvatar } from '../utils/mockImages';
 
 // ----------------------------------------------------------------------
 import axiosInstance from '../services/axios.instance';
+import React, { useState, useEffect, useCallback } from 'react';
+// const [user, setUsers] = useState([]);
+const userslist = []
 axiosInstance
   .get('user/')
   .then((response) => {
     console.log(response);
-    const USERLIST = response.data.map((userData) => {
+    userslist = response.data.map((userData) => {
       return {
         id: userData.id,
         name: userData.username,
         role: (userData.is_staff) ? ("Manager") : ("Checker")
       };
     })
-
+    
 
   })
 
+  console.log('userslist : ' + userslist)
 
-const users = [...Array(5)].map((_, index) => ({
-  id: '12',
+const users = [].map((userslist) => ({
+  id: userslist.id,
   avatarUrl: '/static/user.png/',
-  name: 'faker.name.findName()',
+  name: userslist.username,
   status: sample(['active', 'banned']),
   role: sample([
     'Leader',
