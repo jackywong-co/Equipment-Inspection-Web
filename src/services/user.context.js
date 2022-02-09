@@ -1,42 +1,17 @@
+import axiosInstance from "./axios.instance";
 
 
-
-import axiosInstance from '../services/axios.instance';
-
-axiosInstance
-    .get('user/')
-    .then((response) => {
-        console.log(response);
-        const users = response.data.map((userData) => {
-            return {
-                id: userData.id,
-                name: userData.username,
-                role: (userData.is_staff) ? ("Manager") : ("Checker")
-            };
-        });
-        // const USERLIST = response.data.map((userData) => {
-
-        // })
-
-
-    })
-
-export const userData = () => {
+export const getUsers = () => {
+  return (
     axiosInstance
-    .get('user/')
-    .then((response) => {
-        console.log(response);
-        const userData = response.data.map((userData => {
-            return {
-                id: userData.id,
-                name: userData.username,
-                role: (userData.is_staff) ? ("Manager") : ("Checker")
-            };
-        }));
-        
-
-
-    })
+      .get('user/'))
 }
 
-export default userData;
+export const disableUser = (id) => {
+  return (
+    axiosInstance
+      .put('user/' + id + '/', {
+        is_active: false
+      })
+  )
+}

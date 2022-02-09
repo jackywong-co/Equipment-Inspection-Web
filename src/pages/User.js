@@ -1,8 +1,11 @@
 import { filter } from 'lodash';
 import { Icon } from '@iconify/react';
 import { sentenceCase } from 'change-case';
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import plusFill from '@iconify/icons-eva/plus-fill';
+import editFill from '@iconify/icons-eva/edit-fill';
+import trash2Outline from '@iconify/icons-eva/trash-2-outline';
+import moreVerticalFill from '@iconify/icons-eva/more-vertical-fill';
 import { Link as RouterLink } from 'react-router-dom';
 // material
 import {
@@ -18,7 +21,8 @@ import {
   Container,
   Typography,
   TableContainer,
-  TablePagination
+  TablePagination,
+  Menu, MenuItem, IconButton, ListItemIcon, ListItemText
 } from '@mui/material';
 // components
 import Page from '../components/Page';
@@ -26,12 +30,14 @@ import Label from '../components/Label';
 import Scrollbar from '../components/Scrollbar';
 import SearchNotFound from '../components/SearchNotFound';
 import { UserListHead, UserListToolbar, UserMoreMenu } from '../components/_dashboard/user';
-import axiosInstance from '../services/axios.instance';
+import { getUsers, disableUser } from '../services/user.context';
+//
 
 const TABLE_HEAD = [
-  { id: 'name', label: 'Name', alignRight: false },
-  { id: 'role', label: 'Role', alignRight: false },
-  { id: 'status', label: 'Status', alignRight: false }
+  { id: 'username', label: 'User', alignRight: false },
+  { id: 'is_staff', label: 'Role', alignRight: false },
+  { id: 'is_active', label: 'Status', alignRight: false },
+  { id: '' }
 ];
 
 function descendingComparator(a, b, orderBy) {
@@ -75,12 +81,13 @@ export default function User() {
   const [users, setUsers] = useState([]);
 
   useEffect(() => {
-    axiosInstance.get('user/')
+    getUsers()
       .then((response) => {
+        //  console.log(response.data)
         setUsers(response.data);
       });
   }, []);
-
+  //
   const handleRequestSort = (event, property) => {
     const isAsc = orderBy === property && order === 'asc';
     setOrder(isAsc ? 'desc' : 'asc');
@@ -89,18 +96,18 @@ export default function User() {
 
   const handleSelectAllClick = (event) => {
     if (event.target.checked) {
-      const newSelecteds = users.map((n) => n.id);
+      const newSelecteds = users.map((n) => n.username);
       setSelected(newSelecteds);
       return;
     }
     setSelected([]);
   };
 
-  const handleClick = (event, name) => {
-    const selectedIndex = selected.indexOf(name);
+  const handleClick = (event, username) => {
+    const selectedIndex = selected.indexOf(username);
     let newSelected = [];
     if (selectedIndex === -1) {
-      newSelected = newSelected.concat(selected, name);
+      newSelected = newSelected.concat(selected, username);
     } else if (selectedIndex === 0) {
       newSelected = newSelected.concat(selected.slice(1));
     } else if (selectedIndex === selected.length - 1) {
@@ -132,6 +139,21 @@ export default function User() {
   const filteredUsers = applySortFilter(users, getComparator(order, orderBy), filterName);
 
   const isUserNotFound = filteredUsers.length === 0;
+
+
+  //
+
+  const ref = useRef(null);
+  const [isOpen, setIsOpen] = useState(false);
+  const [anchorEl, setAnchorEl] = useState(null);
+  const deleteHandler = () => {
+    // disableUser(id)
+    // console.log(id)
+  }
+  const menuHandleClick = (event) => {
+    setIsOpen(true);
+    setAnchorEl(event.currentTarget);
+  };
 
   return (
     <Page title="User">
@@ -174,7 +196,7 @@ export default function User() {
                     .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                     .map((row) => {
                       const { id, username, is_staff, is_active } = row;
-                      const isItemSelected = selected.indexOf(id) !== -1;
+                      const isItemSelected = selected.indexOf(username) !== -1;
 
                       return (
                         <TableRow
@@ -188,7 +210,7 @@ export default function User() {
                           <TableCell padding="checkbox">
                             <Checkbox
                               checked={isItemSelected}
-                              onChange={(event) => handleClick(event, id)}
+                              onChange={(event) => handleClick(event, username)}
                             />
                           </TableCell>
                           <TableCell component="th" scope="row" padding="none">
@@ -203,13 +225,45 @@ export default function User() {
                           <TableCell align="left">
                             <Label
                               variant="ghost"
-                              color={(is_active === 'banned' && 'error') || 'success'}
+                              color={is_active ? 'success' : 'error'}
                             >
-                              {is_active ? 'Yes' : 'No'}
+                              {is_active ? 'Active' : 'Disabled'}
                             </Label>
                           </TableCell>
                           <TableCell align="right">
-                            <UserMoreMenu />
+                            {/* <UserMoreMenu id={id} /> */}
+                            <>
+                              <IconButton ref={ref} onClick={menuHandleClick}>
+                                <Icon icon={moreVerticalFill} width={20} height={20} />
+                              </IconButton>
+
+                              <Menu
+                                open={isOpen}
+                                anchorEl={ref.current}
+                                onClose={() => setIsOpen(false)}
+                                PaperProps={{
+                                  sx: { width: 200, maxWidth: '100%' }
+                                }}
+                                anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+                                // anchorEl={anchorEl}
+                                transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+                              >
+                                <MenuItem sx={{ color: 'text.secondary' }} onClick={deleteHandler}>
+                                  <ListItemIcon>
+                                    <Icon icon={trash2Outline} width={24} height={24} />
+                                  </ListItemIcon>
+                                  <ListItemText primary="Disable" primaryTypographyProps={{ variant: 'body2' }} />
+                                </MenuItem>
+
+                                <MenuItem component={RouterLink} to="#" sx={{ color: 'text.secondary' }}>
+                                  <ListItemIcon>
+                                    <Icon icon={editFill} width={24} height={24} />
+                                  </ListItemIcon>
+                                  <ListItemText primary="Edit" primaryTypographyProps={{ variant: 'body2' }} />
+                                </MenuItem>
+                              </Menu>
+                            </>
+
                           </TableCell>
                         </TableRow>
                       );
