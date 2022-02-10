@@ -7,7 +7,7 @@ import Login from './pages/Login';
 // import Register from './pages/Register';
 import DashboardApp from './pages/DashboardApp';
 // import Products from './pages/Products';
-// import Blog from './pages/Blog';
+import Form from './pages/Form';
 import User from './pages/User';
 import NotFound from './pages/Page404';
 //
@@ -23,7 +23,8 @@ export default function Router() {
       children: [
         { element: <Navigate to="/dashboard/app" replace /> },
         { path: 'app', element: <DashboardApp /> },
-        { path: 'user', element: <User /> }
+        { path: 'user', element: <User /> },
+        { path: 'form', element: <Form /> }
       ]
     },
     {
