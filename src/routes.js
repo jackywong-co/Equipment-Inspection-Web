@@ -21,7 +21,7 @@ export default function Router() {
       path: '/dashboard',
       element: <DashboardLayout />,
       children: [
-        { element: <Navigate to="/dashboard/app" replace /> },
+        { path: '/dashboard', element: <Navigate to="app" replace /> },
         { path: 'app', element: <DashboardApp /> },
         { path: 'user', element: <User /> },
         { path: 'form', element: <Form /> }
@@ -51,7 +51,7 @@ export default function Router() {
     },
     { path: '*', element: <Navigate to="/404" replace /> }
   ]);
-
+  console.log(authCtx.isLoggedIn)
   if (authCtx.isLoggedIn) {
     return mainRoutes;
   } else {
