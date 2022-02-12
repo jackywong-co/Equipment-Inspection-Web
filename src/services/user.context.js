@@ -15,3 +15,13 @@ export const disableUser = (id) => {
       })
   )
 }
+export const createUser = (username, password, is_staff) => {
+  return (
+    axiosInstance
+      .put('register/', {
+        username: username,
+        password: password,
+        is_staff: is_staff
+      })
+  )
+}

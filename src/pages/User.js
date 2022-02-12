@@ -5,7 +5,8 @@ import trash2Outline from '@iconify/icons-eva/trash-2-outline';
 import plusFill from '@iconify/icons-eva/plus-fill';
 // mui
 import {
-  Button, Card, Container, Stack, Table, TableBody, TableCell, TableContainer, TablePagination, TableRow, Typography, IconButton, Menu, MenuItem, ListItemIcon, ListItemText, Avatar
+  Button, Card, Container, Stack, Table, TableBody, TableCell, TableContainer, TablePagination, TableRow, Typography, IconButton, Menu, MenuItem, ListItemIcon, ListItemText, Avatar,
+  Dialog, TextField, Box, CssBaseline
 } from '@mui/material';
 // react
 import { useEffect, useState } from 'react';
@@ -19,6 +20,10 @@ import EnhancedTableHead from '../components/EnchancedTableHead';
 import { filter } from 'lodash';
 import EnchancedToolbar from '../components/EnchancedToolbar';
 import SearchNotFound from '../components/SearchNotFound';
+import UserCreateForm from '../components/UserCreateForm';
+// form
+import { useFormik } from 'formik';
+import * as yup from 'yup';
 export default function User() {
 
   // api
@@ -110,11 +115,56 @@ export default function User() {
       element: event.currentTarget
     };
     setAnchorEl(obj);
-  }
+  };
   const handleElClose = () => {
     setAnchorEl(null);
-  }
+  };
+  // add user
+  const [addOpen, setAddOpen] = useState(false);
+  const handleAddClick = () => {
+    setAddOpen(true);
+  };
+  const handleAddClose = () => {
+    setAddOpen(false);
+  };
+  // add user form 
+  const roles = [
+    {
+      value: 'checker',
+      label: 'Checker',
+    },
+    {
+      value: 'manager',
+      label: 'Manager',
+    },
+  ];
 
+  const validationSchema = yup.object({
+    username: yup
+      .string('Enter your username')
+      .required('Username is required'),
+    password: yup
+      .string('Enter your password')
+      .min(8, 'Password should be of minimum 8 characters length')
+      .required('Password is required'),
+  });
+  const formik = useFormik({
+    initialValues: {
+      username: '',
+      password: '',
+      role: 'checker',
+    },
+    validationSchema: validationSchema,
+    onSubmit: (values, { resetForm }) => {
+       
+      console.log({
+        username: values.username,
+        password: values.password,
+        role: values.role
+      })
+      formik.resetForm();
+    },
+  });
   return (
     <Page title="User">
       <Container>
@@ -124,13 +174,13 @@ export default function User() {
           </Typography>
           <Button
             variant="contained"
-            component={RouterLink}
-            to="#"
+            onClick={handleAddClick}
             startIcon={<Icon icon={plusFill} />}
           >
             New User
           </Button>
         </Stack>
+
         {/* main */}
         <Card>
           {/* Toolbar */}
@@ -235,6 +285,85 @@ export default function User() {
             />
           </TableContainer>
         </Card>
+        {/* add dialoag form */}
+        <Dialog open={addOpen} onClose={handleAddClose}>
+
+          {/* add user form */}
+          <Container component="main" maxWidth="xs">
+            <CssBaseline />
+            <Box
+              sx={{
+                marginTop: 8,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+              }}
+            >
+              <Typography component="h1" variant="h5">
+                Create User
+              </Typography>
+              <form onSubmit={formik.handleSubmit} noValidate sx={{ mt: 1 }}>
+                <TextField
+                  margin="normal"
+                  required
+                  fullWidth
+                  id="username"
+                  label="Username"
+                  name="username"
+                  autoComplete="username"
+                  value={formik.values.username}
+                  onChange={formik.handleChange}
+                  error={formik.touched.username && Boolean(formik.errors.username)}
+                  helperText={formik.touched.username && formik.errors.username}
+                  autoFocus
+                />
+                <TextField
+                  margin="normal"
+                  required
+                  fullWidth
+                  name="password"
+                  label="Password"
+                  type="password"
+                  id="password"
+                  autoComplete="current-password"
+                  value={formik.values.password}
+                  onChange={formik.handleChange}
+                  error={formik.touched.password && Boolean(formik.errors.password)}
+                  helperText={formik.touched.password && formik.errors.password}
+
+                />
+                <TextField
+                  margin="normal"
+                  required
+                  fullWidth
+                  name="role"
+                  label="Role"
+                  id="role"
+                  select
+                  value={formik.values.role}
+                  onChange={formik.handleChange}
+                >
+                  {roles.map((option) => (
+                    <MenuItem key={option.value} value={option.value}>
+                      {option.label}
+                    </MenuItem>
+                  ))}
+                </TextField>
+                <Button
+                  type="submit"
+                  fullWidth
+                  variant="contained"
+                  sx={{ mt: 3, mb: 2 }}
+                >
+                  Submit
+                </Button>
+
+              </form>
+            </Box>
+          </Container>
+
+          {/* <UserCreateForm /> */}
+        </Dialog>
       </Container>
     </Page>
   );
