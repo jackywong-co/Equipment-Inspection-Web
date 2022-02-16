@@ -14,7 +14,7 @@ import { useEffect, useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import Page from '../components/Page';
 // api
-import { getUsers } from '../services/user.context';
+import { getUsers, activeUser, disableUser, checkUser } from '../services/user.context';
 import Label from '../components/Label';
 import EnhancedTableHead from '../components/EnchancedTableHead';
 import { filter } from 'lodash';
@@ -24,8 +24,9 @@ import UserCreateForm from '../components/UserCreateForm';
 // form
 import { useFormik } from 'formik';
 import * as yup from 'yup';
-export default function User() {
 
+export default function User() {
+  
   // api
   const [userItems, setUserItems] = useState([]);
   useEffect(() => {
@@ -41,8 +42,6 @@ export default function User() {
   const [order, setOrder] = useState('asc');
   const [selected, setSelected] = useState([]);
   const [orderBy, setOrderBy] = useState('username');
-
-
 
   const TABLE_HEAD = [
     { id: 'username', label: 'User', alignRight: false },
@@ -115,10 +114,42 @@ export default function User() {
       element: event.currentTarget
     };
     setAnchorEl(obj);
+    checkUserStatus(inputFormId)
   };
   const handleElClose = () => {
     setAnchorEl(null);
   };
+  // check user is staff
+  const [userStatus, setUserStatus] = useState();
+  const checkUserStatus = (id) => {
+    checkUser(id)
+      .then((response) => {
+        setUserStatus(response.data.is_active)
+      })
+  }
+  // active user
+  const handleActiveUesr = (id) => {
+    activeUser(id)
+      // .then(getUsers()
+      //   .then((response) => {
+      //     setUserItems(response.data);
+      //   })
+      // )
+    handleElClose();
+  }
+
+  // disable user
+  const handleDisableUser = (id) => {
+    disableUser(id)
+    
+      // .then(getUsers()
+      //   .then((response) => {
+      //     setUserItems(response.data);
+      //   })
+      // )
+    handleElClose();
+  };
+
   // add user
   const [addOpen, setAddOpen] = useState(false);
   const handleAddClick = () => {
@@ -155,14 +186,14 @@ export default function User() {
       role: 'checker',
     },
     validationSchema: validationSchema,
-    onSubmit: (values, { resetForm }) => {
-       
+    onSubmit: (values, { resetForm, setSubmitting }) => {
+      setSubmitting(false);
       console.log({
         username: values.username,
         password: values.password,
         role: values.role
       })
-      formik.resetForm();
+      resetForm();
     },
   });
   return (
@@ -245,13 +276,27 @@ export default function User() {
                           onClose={handleElClose}
                           anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
                           transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+
                         >
-                          <MenuItem sx={{ color: 'text.secondary' }} onClick={() => { console.log(row.id) }}>
-                            <ListItemIcon>
-                              <Icon icon={trash2Outline} width={24} height={24} />
-                            </ListItemIcon>
-                            <ListItemText primary="Disable" primaryTypographyProps={{ variant: 'body2' }} />
-                          </MenuItem>
+                          {userStatus
+                            ?
+                            <MenuItem sx={{ color: 'text.secondary' }} onClick={() => { handleDisableUser(row.id) }}>
+                              <ListItemIcon>
+                                <Icon icon={trash2Outline} width={24} height={24} />
+                              </ListItemIcon>
+                              <ListItemText primary="Disable" primaryTypographyProps={{ variant: 'body2' }} />
+                            </MenuItem>
+                            :
+                            <MenuItem sx={{ color: 'text.secondary' }} onClick={() => { handleActiveUesr(row.id) }}>
+                              <ListItemIcon>
+                                <Icon icon={trash2Outline} width={24} height={24} />
+                              </ListItemIcon>
+                              <ListItemText primary="Active" primaryTypographyProps={{ variant: 'body2' }} />
+                            </MenuItem>
+                          }
+
+
+
                         </Menu>
                       </TableCell>
                     </TableRow>
@@ -354,6 +399,7 @@ export default function User() {
                   fullWidth
                   variant="contained"
                   sx={{ mt: 3, mb: 2 }}
+                  disabled={formik.isSubmitting}
                 >
                   Submit
                 </Button>

@@ -7,6 +7,22 @@ export const getUsers = () => {
       .get('user/'))
 }
 
+export const checkUser = (id) => {
+  return (
+    axiosInstance
+      .get('user/' + id + '/')
+  )
+}
+
+export const activeUser = (id) => {
+  return (
+    axiosInstance
+      .put('user/' + id + '/', {
+        is_active: true
+      })
+  )
+}
+
 export const disableUser = (id) => {
   return (
     axiosInstance
