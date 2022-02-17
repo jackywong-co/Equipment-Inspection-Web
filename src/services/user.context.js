@@ -14,6 +14,17 @@ export const checkUser = (id) => {
   )
 }
 
+export const updateUser = (id, username, is_staff) => {
+  return (
+    axiosInstance
+    .put('user/' + id + '/', {
+      username: username,
+      is_staff: is_staff
+    })
+  )
+}
+
+
 export const activeUser = (id) => {
   return (
     axiosInstance
@@ -34,7 +45,7 @@ export const disableUser = (id) => {
 export const createUser = (username, password, is_staff) => {
   return (
     axiosInstance
-      .put('register/', {
+      .post('register/', {
         username: username,
         password: password,
         is_staff: is_staff

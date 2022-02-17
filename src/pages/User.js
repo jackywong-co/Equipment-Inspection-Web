@@ -3,6 +3,7 @@ import { Icon } from '@iconify/react';
 import moreVerticalFill from '@iconify/icons-eva/more-vertical-fill';
 import trash2Outline from '@iconify/icons-eva/trash-2-outline';
 import plusFill from '@iconify/icons-eva/plus-fill';
+import editFill from '@iconify/icons-eva/edit-fill';
 // mui
 import {
   Button, Card, Container, Stack, Table, TableBody, TableCell, TableContainer, TablePagination, TableRow, Typography, IconButton, Menu, MenuItem, ListItemIcon, ListItemText, Avatar,
@@ -14,7 +15,7 @@ import { useEffect, useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import Page from '../components/Page';
 // api
-import { getUsers, activeUser, disableUser, checkUser } from '../services/user.context';
+import { getUsers, activeUser, disableUser, checkUser, createUser, updateUser } from '../services/user.context';
 import Label from '../components/Label';
 import EnhancedTableHead from '../components/EnchancedTableHead';
 import { filter } from 'lodash';
@@ -26,15 +27,18 @@ import { useFormik } from 'formik';
 import * as yup from 'yup';
 
 export default function User() {
-  
+
   // api
   const [userItems, setUserItems] = useState([]);
-  useEffect(() => {
-    getUsers()
+  const loadUserList = async () => {
+    await getUsers()
       .then((response) => {
         // console.log(response.data);
         setUserItems(response.data);
       });
+  }
+  useEffect(() => {
+    loadUserList();
   }, []);
 
 
@@ -128,25 +132,16 @@ export default function User() {
       })
   }
   // active user
-  const handleActiveUesr = (id) => {
-    activeUser(id)
-      // .then(getUsers()
-      //   .then((response) => {
-      //     setUserItems(response.data);
-      //   })
-      // )
+  const handleActiveUesr = async (id) => {
+    await activeUser(id)
+    await loadUserList()
     handleElClose();
   }
 
   // disable user
-  const handleDisableUser = (id) => {
-    disableUser(id)
-    
-      // .then(getUsers()
-      //   .then((response) => {
-      //     setUserItems(response.data);
-      //   })
-      // )
+  const handleDisableUser = async (id) => {
+    await disableUser(id)
+    await loadUserList()
     handleElClose();
   };
 
@@ -158,6 +153,7 @@ export default function User() {
   const handleAddClose = () => {
     setAddOpen(false);
   };
+
   // add user form 
   const roles = [
     {
@@ -179,6 +175,7 @@ export default function User() {
       .min(8, 'Password should be of minimum 8 characters length')
       .required('Password is required'),
   });
+
   const formik = useFormik({
     initialValues: {
       username: '',
@@ -186,16 +183,89 @@ export default function User() {
       role: 'checker',
     },
     validationSchema: validationSchema,
-    onSubmit: (values, { resetForm, setSubmitting }) => {
+    onSubmit: async (values, { resetForm, setSubmitting, setErrors }) => {
       setSubmitting(false);
-      console.log({
-        username: values.username,
-        password: values.password,
-        role: values.role
-      })
-      resetForm();
+      let resetControl = true;
+      for (let x in userItems) {
+        console.log(userItems[x].username)
+        let usernameList = userItems[x].username
+        if (values.username === usernameList) {
+          setErrors({ username: 'username in used' });
+          resetControl = false;
+        }
+      }
+      if (resetControl) {
+        const username = values.username;
+        const password = values.password;
+        const role = values.role === 'checker' ? 'false' : 'true';
+        await createUser(username, password, role);
+        await loadUserList();
+        resetForm();
+      }
     },
   });
+
+  // edit user
+  const [editUser, setEditUser] = useState({
+    id: '',
+    username: '',
+    role: ''
+  });
+  const [editOpen, setEditOpen] = useState(false);
+  const handleEditClick = (id) => {
+    for (let x in userItems) {
+      if (id === userItems[x].id) {
+        let username = userItems[x].username;
+        let role = userItems[x].is_staff ? 'manager' : 'checker';
+        setEditUser({
+          id: id,
+          username: username,
+          role: role
+        });
+      }
+    }
+    setEditOpen(true);
+    handleElClose();
+  }
+  const handleEditClose = () => {
+    setEditOpen(false);
+  };
+  const editValidationSchema = yup.object({
+    username: yup
+      .string('Enter your username')
+      .required('Username is required'),
+  });
+  // edit user form
+  const editUserFormik = useFormik({
+    enableReinitialize: true,
+    initialValues: {
+      username: editUser.username,
+      role: editUser.role,
+    },
+    validationSchema: editValidationSchema,
+    onSubmit: async (values, { resetForm, setSubmitting, setErrors }) => {
+      setSubmitting(false);
+      let resetControl = true;
+      for (let x in userItems) {
+        let usernameList = userItems[x].username
+        if (values.username === usernameList) {
+          if (values.username != usernameList) {
+            setErrors({ username: 'username in used' });
+            resetControl = false;
+          }
+        }
+      }
+      if (resetControl) {
+        const id = editUser.id;
+        const username = values.username;
+        const role = values.role === 'checker' ? 'false' : 'true';
+        await updateUser(id, username, role);
+        await loadUserList();
+        // resetForm();
+      }
+    },
+  });
+
   return (
     <Page title="User">
       <Container>
@@ -294,9 +364,12 @@ export default function User() {
                               <ListItemText primary="Active" primaryTypographyProps={{ variant: 'body2' }} />
                             </MenuItem>
                           }
-
-
-
+                          <MenuItem sx={{ color: 'text.secondary' }} onClick={() => { handleEditClick(row.id) }}>
+                            <ListItemIcon>
+                              <Icon icon={editFill} width={24} height={24} />
+                            </ListItemIcon>
+                            <ListItemText primary="Edit" primaryTypographyProps={{ variant: 'body2' }} />
+                          </MenuItem>
                         </Menu>
                       </TableCell>
                     </TableRow>
@@ -403,14 +476,72 @@ export default function User() {
                 >
                   Submit
                 </Button>
-
               </form>
             </Box>
           </Container>
-
-          {/* <UserCreateForm /> */}
         </Dialog>
       </Container>
+
+      <Dialog open={editOpen} onClose={handleEditClose}>
+
+        {/* edit user form */}
+        <Container component="main" maxWidth="xs">
+          <CssBaseline />
+          <Box
+            sx={{
+              marginTop: 8,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+            }}
+          >
+            <Typography component="h1" variant="h5">
+              Edit User
+            </Typography>
+            <form onSubmit={editUserFormik.handleSubmit} noValidate sx={{ mt: 1 }}>
+              <TextField
+                margin="normal"
+                required
+                fullWidth
+                id="username"
+                label="Username"
+                name="username"
+                autoComplete="username"
+                value={editUserFormik.values.username}
+                onChange={editUserFormik.handleChange}
+                error={editUserFormik.touched.username && Boolean(editUserFormik.errors.username)}
+                helperText={editUserFormik.touched.username && editUserFormik.errors.username}
+              />
+              <TextField
+                margin="normal"
+                required
+                fullWidth
+                name="role"
+                label="Role"
+                id="role"
+                select
+                value={editUserFormik.values.role}
+                onChange={editUserFormik.handleChange}
+              >
+                {roles.map((option) => (
+                  <MenuItem key={option.value} value={option.value}>
+                    {option.label}
+                  </MenuItem>
+                ))}
+              </TextField>
+              <Button
+                type="submit"
+                fullWidth
+                variant="contained"
+                sx={{ mt: 3, mb: 2 }}
+                disabled={editUserFormik.isSubmitting}
+              >
+                Submit
+              </Button>
+            </form>
+          </Box>
+        </Container>
+      </Dialog>
     </Page>
   );
 }

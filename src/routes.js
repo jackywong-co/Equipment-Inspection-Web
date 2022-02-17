@@ -9,6 +9,8 @@ import DashboardApp from './pages/DashboardApp';
 // import Products from './pages/Products';
 import Form from './pages/Form';
 import User from './pages/User';
+import Room from './pages/Room';
+import Equipment from './pages/Equipment';
 import NotFound from './pages/Page404';
 //
 import { useContext } from "react";
@@ -24,7 +26,9 @@ export default function Router() {
         { path: '/dashboard', element: <Navigate to="app" replace /> },
         { path: 'app', element: <DashboardApp /> },
         { path: 'user', element: <User /> },
-        { path: 'form', element: <Form /> }
+        { path: 'form', element: <Form /> },
+        { path: 'room', element: <Room /> },
+        { path: 'equipment', element: <Equipment /> }
       ]
     },
     {
