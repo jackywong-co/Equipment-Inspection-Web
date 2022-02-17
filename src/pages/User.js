@@ -20,7 +20,6 @@ import EnhancedTableHead from '../components/EnchancedTableHead';
 import { filter } from 'lodash';
 import EnchancedToolbar from '../components/EnchancedToolbar';
 import SearchNotFound from '../components/SearchNotFound';
-import UserCreateForm from '../components/UserCreateForm';
 // form
 import { useFormik } from 'formik';
 import * as yup from 'yup';
@@ -43,7 +42,6 @@ export default function User() {
 
   // table header
   const [order, setOrder] = useState('asc');
-  const [selected, setSelected] = useState([]);
   const [orderBy, setOrderBy] = useState('username');
 
   const TABLE_HEAD = [
@@ -81,15 +79,11 @@ export default function User() {
     }
     return stabilizedThis.map((el) => el[0]);
   }
-
   const handleRequestSort = (event, property) => {
     const isAsc = orderBy === property && order === 'asc';
     setOrder(isAsc ? 'desc' : 'asc');
     setOrderBy(property);
   };
-
-
-
   // toolbar
   const [filterName, setFilterName] = useState('');
   const handleFilterByName = (event) => {
@@ -286,7 +280,6 @@ export default function User() {
         <Card>
           {/* Toolbar */}
           <EnchancedToolbar
-            numSelected={selected.length}
             filterName={filterName}
             onFilterName={handleFilterByName}
           />
@@ -299,7 +292,6 @@ export default function User() {
                 orderBy={orderBy}
                 headLabel={TABLE_HEAD}
                 rowCount={userItems.length}
-                numSelected={selected.length}
                 onRequestSort={handleRequestSort}
               />
               {/* table body */}
