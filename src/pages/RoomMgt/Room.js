@@ -12,43 +12,42 @@ import {
 // react
 import { useEffect, useState } from 'react';
 // router
-import Page from '../components/Page';
+import Page from 'src/components/Page';
 // api
-import { getUsers, activeUser, disableUser, checkUser, createUser, updateUser } from '../services/user.context';
-import Label from '../components/Label';
-import EnhancedTableHead from '../components/EnchancedTableHead';
+import { getRooms, checkRoom, activeRoom, disableRoom, createRoom, updateRoom } from 'src/services/room.context';
+import Label from 'src/components/Label';
+import EnhancedTableHead from 'src/components/EnchancedTableHead';
 import { filter } from 'lodash';
-import EnchancedToolbar from '../components/EnchancedToolbar';
-import SearchNotFound from '../components/SearchNotFound';
-import UserCreateForm from '../components/UserCreateForm';
+import EnchancedToolbar from 'src/components/EnchancedToolbar';
+import SearchNotFound from 'src/components/SearchNotFound';
 // form
 import { useFormik } from 'formik';
 import * as yup from 'yup';
 
-export default function User() {
+export default function Room() {
 
-  // api
-  const [userItems, setUserItems] = useState([]);
-  const loadUserList = async () => {
-    await getUsers()
+  const [roomList, setRoomList] = useState([]);
+
+  const loadRoomList = async () => {
+    await getRooms()
       .then((response) => {
         // console.log(response.data);
-        setUserItems(response.data);
+        setRoomList(response.data);
       });
   }
+
   useEffect(() => {
-    loadUserList();
+    loadRoomList();
   }, []);
 
 
   // table header
   const [order, setOrder] = useState('asc');
-  const [selected, setSelected] = useState([]);
-  const [orderBy, setOrderBy] = useState('username');
+  const [orderBy, setOrderBy] = useState('room_name');
 
   const TABLE_HEAD = [
-    { id: 'username', label: 'User', alignRight: false },
-    { id: 'is_staff', label: 'Role', alignRight: false },
+    { id: 'room_name', label: 'Room Name', alignRight: false },
+    { id: 'location', label: 'Location', alignRight: false },
     { id: 'is_active', label: 'Status', alignRight: false },
     { id: '' }
   ];
@@ -77,7 +76,7 @@ export default function User() {
       return a[1] - b[1];
     });
     if (query) {
-      return filter(array, (user) => user.username.toLowerCase().indexOf(query.toLowerCase()) !== -1);
+      return filter(array, (user) => user.room_name.toLowerCase().indexOf(query.toLowerCase()) !== -1);
     }
     return stabilizedThis.map((el) => el[0]);
   }
@@ -95,7 +94,7 @@ export default function User() {
   const handleFilterByName = (event) => {
     setFilterName(event.target.value);
   };
-  const filteredUsers = applySortFilter(userItems, getComparator(order, orderBy), filterName);
+  const filteredUsers = applySortFilter(roomList, getComparator(order, orderBy), filterName);
   const isUserNotFound = filteredUsers.length === 0;
 
   // TablePagination
@@ -108,7 +107,7 @@ export default function User() {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
   };
-  const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - userItems.length) : 0;
+  const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - roomList.length) : 0;
   // more menu
   const [anchorEl, setAnchorEl] = useState(null);
   const handleElClick = (inputFormId, event) => {
@@ -117,34 +116,35 @@ export default function User() {
       element: event.currentTarget
     };
     setAnchorEl(obj);
-    checkUserStatus(inputFormId)
+    checkCheckStatus(inputFormId)
   };
   const handleElClose = () => {
     setAnchorEl(null);
   };
-  // check user is staff
-  const [userStatus, setUserStatus] = useState();
-  const checkUserStatus = (id) => {
-    checkUser(id)
+
+  // check room is active
+  const [roomStatus, setRoomStatus] = useState();
+  const checkCheckStatus = (id) => {
+    checkRoom(id)
       .then((response) => {
-        setUserStatus(response.data.is_active)
+        setRoomStatus(response.data.is_active)
       })
   }
-  // active user
-  const handleActiveUesr = async (id) => {
-    await activeUser(id)
-    await loadUserList()
+  // active room
+  const handleActiveRoom = async (id) => {
+    await activeRoom(id)
+    await loadRoomList()
     handleElClose();
   }
 
-  // disable user
-  const handleDisableUser = async (id) => {
-    await disableUser(id)
-    await loadUserList()
+  // disable room
+  const handleDisableRoom = async (id) => {
+    await disableRoom(id)
+    await loadRoomList()
     handleElClose();
   };
 
-  // add user
+  // add room
   const [addOpen, setAddOpen] = useState(false);
   const handleAddClick = () => {
     setAddOpen(true);
@@ -153,73 +153,60 @@ export default function User() {
     setAddOpen(false);
   };
 
-  // add user form 
-  const roles = [
-    {
-      value: 'checker',
-      label: 'Checker',
-    },
-    {
-      value: 'manager',
-      label: 'Manager',
-    },
-  ];
-
+  // add room form 
   const validationSchema = yup.object({
-    username: yup
-      .string('Enter your username')
-      .required('Username is required'),
-    password: yup
-      .string('Enter your password')
-      .min(8, 'Password should be of minimum 8 characters length')
-      .required('Password is required'),
+    room_name: yup
+      .string('Enter Room Name')
+      .required('Room Name is required'),
+    location: yup
+      .string('Enter Location')
+      .required('Location is required'),
   });
 
   const formik = useFormik({
     initialValues: {
-      username: '',
-      password: '',
-      role: 'checker',
+      room_name: '',
+      location: '',
     },
     validationSchema: validationSchema,
     onSubmit: async (values, { resetForm, setSubmitting, setErrors }) => {
       setSubmitting(false);
       let resetControl = true;
-      for (let x in userItems) {
-        console.log(userItems[x].username)
-        let usernameList = userItems[x].username
-        if (values.username === usernameList) {
-          setErrors({ username: 'username in used' });
+      for (let x in roomList) {
+        console.log(roomList[x].room_name)
+        let roomNameList = roomList[x].room_name
+        if (values.room_name === roomNameList) {
+          setErrors({ room_name: 'Room Name in used' });
           resetControl = false;
         }
       }
       if (resetControl) {
-        const username = values.username;
-        const password = values.password;
-        const role = values.role === 'checker' ? 'false' : 'true';
-        await createUser(username, password, role);
-        await loadUserList();
+        const room_name = values.room_name;
+        const location = values.location;
+        await createRoom(room_name, location);
+        await loadRoomList();
         resetForm();
+        handleEditClose();
       }
     },
   });
 
-  // edit user
-  const [editUser, setEditUser] = useState({
+  // edit room
+  const [editRoom, setEditRoom] = useState({
     id: '',
-    username: '',
-    role: ''
+    room_name: '',
+    location: ''
   });
   const [editOpen, setEditOpen] = useState(false);
   const handleEditClick = (id) => {
-    for (let x in userItems) {
-      if (id === userItems[x].id) {
-        let username = userItems[x].username;
-        let role = userItems[x].is_staff ? 'manager' : 'checker';
-        setEditUser({
+    for (let x in roomList) {
+      if (id === roomList[x].id) {
+        let room_name = roomList[x].room_name;
+        let location = roomList[x].location;
+        setEditRoom({
           id: id,
-          username: username,
-          role: role
+          room_name: room_name,
+          location: location
         });
       }
     }
@@ -230,36 +217,40 @@ export default function User() {
     setEditOpen(false);
   };
   const editValidationSchema = yup.object({
-    username: yup
-      .string('Enter your username')
-      .required('Username is required'),
+    room_name: yup
+      .string('Enter Room Name')
+      .required('Room name is required'),
+    location: yup
+      .string('Enter Location')
+      .required('Location is required'),
   });
-  // edit user form
+
+  // edit room form
   const editUserFormik = useFormik({
     enableReinitialize: true,
     initialValues: {
-      username: editUser.username,
-      role: editUser.role,
+      room_name: editRoom.room_name,
+      location: editRoom.location,
     },
     validationSchema: editValidationSchema,
     onSubmit: async (values, { resetForm, setSubmitting, setErrors }) => {
       setSubmitting(false);
       let resetControl = true;
-      for (let x in userItems) {
-        let usernameList = userItems[x].username
-        if (values.username === usernameList) {
-          if (values.username !== usernameList) {
-            setErrors({ username: 'username in used' });
+      for (let x in roomList) {
+        let roomNameList = roomList[x].room_name
+        if (values.room_name === roomNameList) {
+          if (values.room_name != roomNameList) {
+            setErrors({ room_name: 'Room Name in used' });
             resetControl = false;
           }
         }
       }
       if (resetControl) {
-        const id = editUser.id;
-        const username = values.username;
-        const role = values.role === 'checker' ? 'false' : 'true';
-        await updateUser(id, username, role);
-        await loadUserList();
+        const id = editRoom.id;
+        const room_name = values.room_name;
+        const location = values.location;
+        await updateRoom(id, room_name, location);
+        await loadRoomList();
         resetForm();
         handleEditClose();
       }
@@ -267,18 +258,18 @@ export default function User() {
   });
 
   return (
-    <Page title="User">
+    <Page title="Room">
       <Container>
         <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5}>
           <Typography variant="h4" gutterBottom>
-            User
+            Room
           </Typography>
           <Button
             variant="contained"
             onClick={handleAddClick}
             startIcon={<Icon icon={plusFill} />}
           >
-            New User
+            New Room
           </Button>
         </Stack>
 
@@ -286,7 +277,7 @@ export default function User() {
         <Card>
           {/* Toolbar */}
           <EnchancedToolbar
-            numSelected={selected.length}
+
             filterName={filterName}
             onFilterName={handleFilterByName}
           />
@@ -298,8 +289,7 @@ export default function User() {
                 order={order}
                 orderBy={orderBy}
                 headLabel={TABLE_HEAD}
-                rowCount={userItems.length}
-                numSelected={selected.length}
+                rowCount={roomList.length}
                 onRequestSort={handleRequestSort}
               />
               {/* table body */}
@@ -313,13 +303,13 @@ export default function User() {
                     >
                       <TableCell component="th" scope="row" padding="normal" >
                         <Stack direction="row" alignItems="center" spacing={5}>
-                          <Avatar alt={row.username} src='/static/user.png' />
+                          <Avatar alt={row.room_name} src='/static/user.png' />
                           <Typography variant="subtitle2" noWrap >
-                            {row.username}
+                            {row.room_name}
                           </Typography>
                         </Stack>
                       </TableCell>
-                      <TableCell align="left">{row.is_staff ? 'Menager' : 'Checker'}</TableCell>
+                      <TableCell align="left">{row.location}</TableCell>
                       <TableCell align="left">
                         <Label
                           variant="ghost"
@@ -348,16 +338,16 @@ export default function User() {
                           transformOrigin={{ vertical: 'top', horizontal: 'right' }}
 
                         >
-                          {userStatus
+                          {roomStatus
                             ?
-                            <MenuItem sx={{ color: 'text.secondary' }} onClick={() => { handleDisableUser(row.id) }}>
+                            <MenuItem sx={{ color: 'text.secondary' }} onClick={() => { handleDisableRoom(row.id) }}>
                               <ListItemIcon>
                                 <Icon icon={trash2Outline} width={24} height={24} />
                               </ListItemIcon>
                               <ListItemText primary="Disable" primaryTypographyProps={{ variant: 'body2' }} />
                             </MenuItem>
                             :
-                            <MenuItem sx={{ color: 'text.secondary' }} onClick={() => { handleActiveUesr(row.id) }}>
+                            <MenuItem sx={{ color: 'text.secondary' }} onClick={() => { handleActiveRoom(row.id) }}>
                               <ListItemIcon>
                                 <Icon icon={trash2Outline} width={24} height={24} />
                               </ListItemIcon>
@@ -395,7 +385,7 @@ export default function User() {
             <TablePagination
               rowsPerPageOptions={[5, 10, 25]}
               component="div"
-              count={userItems.length}
+              count={roomList.length}
               rowsPerPage={rowsPerPage}
               page={page}
               onPageChange={handleChangePage}
@@ -406,7 +396,7 @@ export default function User() {
         {/* add dialoag form */}
         <Dialog open={addOpen} onClose={handleAddClose}>
 
-          {/* add user form */}
+          {/* add room form */}
           <Container component="main" maxWidth="xs">
             <CssBaseline />
             <Box
@@ -418,55 +408,37 @@ export default function User() {
               }}
             >
               <Typography component="h1" variant="h5">
-                Create User
+                Create Room
               </Typography>
               <form onSubmit={formik.handleSubmit} noValidate sx={{ mt: 1 }}>
                 <TextField
                   margin="normal"
                   required
                   fullWidth
-                  id="username"
-                  label="Username"
-                  name="username"
-                  autoComplete="username"
-                  value={formik.values.username}
+                  id="room_name"
+                  label="Room Name"
+                  name="room_name"
+                  autoComplete="room_name"
+                  value={formik.values.room_name}
                   onChange={formik.handleChange}
-                  error={formik.touched.username && Boolean(formik.errors.username)}
-                  helperText={formik.touched.username && formik.errors.username}
+                  error={formik.touched.room_name && Boolean(formik.errors.room_name)}
+                  helperText={formik.touched.room_name && formik.errors.room_name}
                   autoFocus
                 />
                 <TextField
                   margin="normal"
                   required
                   fullWidth
-                  name="password"
-                  label="Password"
-                  type="password"
-                  id="password"
-                  autoComplete="current-password"
-                  value={formik.values.password}
+                  name="location"
+                  label="Location"
+                  type="location"
+                  id="location"
+                  autoComplete="current-location"
+                  value={formik.values.location}
                   onChange={formik.handleChange}
-                  error={formik.touched.password && Boolean(formik.errors.password)}
-                  helperText={formik.touched.password && formik.errors.password}
-
+                  error={formik.touched.location && Boolean(formik.errors.location)}
+                  helperText={formik.touched.location && formik.errors.location}
                 />
-                <TextField
-                  margin="normal"
-                  required
-                  fullWidth
-                  name="role"
-                  label="Role"
-                  id="role"
-                  select
-                  value={formik.values.role}
-                  onChange={formik.handleChange}
-                >
-                  {roles.map((option) => (
-                    <MenuItem key={option.value} value={option.value}>
-                      {option.label}
-                    </MenuItem>
-                  ))}
-                </TextField>
                 <Button
                   type="submit"
                   fullWidth
@@ -496,39 +468,36 @@ export default function User() {
             }}
           >
             <Typography component="h1" variant="h5">
-              Edit User
+              Edit Form
             </Typography>
             <form onSubmit={editUserFormik.handleSubmit} noValidate sx={{ mt: 1 }}>
               <TextField
                 margin="normal"
                 required
                 fullWidth
-                id="username"
-                label="Username"
-                name="username"
-                autoComplete="username"
-                value={editUserFormik.values.username}
+                id="room_name"
+                label="Room Name"
+                name="room_name"
+                autoComplete="room_name"
+                value={editUserFormik.values.room_name}
                 onChange={editUserFormik.handleChange}
-                error={editUserFormik.touched.username && Boolean(editUserFormik.errors.username)}
-                helperText={editUserFormik.touched.username && editUserFormik.errors.username}
+                error={editUserFormik.touched.room_name && Boolean(editUserFormik.errors.room_name)}
+                helperText={editUserFormik.touched.room_name && editUserFormik.errors.room_name}
               />
               <TextField
                 margin="normal"
                 required
                 fullWidth
-                name="role"
-                label="Role"
-                id="role"
-                select
-                value={editUserFormik.values.role}
+                name="location"
+                label="Location"
+                type="location"
+                id="location"
+                autoComplete="current-location"
+                value={editUserFormik.values.location}
                 onChange={editUserFormik.handleChange}
-              >
-                {roles.map((option) => (
-                  <MenuItem key={option.value} value={option.value}>
-                    {option.label}
-                  </MenuItem>
-                ))}
-              </TextField>
+                error={editUserFormik.touched.location && Boolean(editUserFormik.errors.location)}
+                helperText={editUserFormik.touched.location && editUserFormik.errors.location}
+              />
               <Button
                 type="submit"
                 fullWidth

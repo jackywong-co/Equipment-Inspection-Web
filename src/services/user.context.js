@@ -6,25 +6,21 @@ export const getUsers = () => {
     axiosInstance
       .get('user/'))
 }
-
 export const checkUser = (id) => {
   return (
     axiosInstance
       .get('user/' + id + '/')
   )
 }
-
 export const updateUser = (id, username, is_staff) => {
   return (
     axiosInstance
-    .put('user/' + id + '/', {
-      username: username,
-      is_staff: is_staff
-    })
+      .put('user/' + id + '/', {
+        username: username,
+        is_staff: is_staff
+      })
   )
 }
-
-
 export const activeUser = (id) => {
   return (
     axiosInstance
@@ -33,7 +29,6 @@ export const activeUser = (id) => {
       })
   )
 }
-
 export const disableUser = (id) => {
   return (
     axiosInstance

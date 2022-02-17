@@ -1,6 +1,6 @@
 import { Navigate, useRoutes } from 'react-router-dom';
 // layouts
-import DashboardLayout from './layouts/dashboard';
+import DashboardLayout from 'src/layouts/dashboard';
 import LogoOnlyLayout from './layouts/LogoOnlyLayout';
 //
 import Login from './pages/Login';
@@ -8,9 +8,9 @@ import Login from './pages/Login';
 import DashboardApp from './pages/DashboardApp';
 // import Products from './pages/Products';
 import Form from './pages/Form';
-import User from './pages/User';
-import Room from './pages/Room';
-import Equipment from './pages/Equipment';
+import User from 'src/pages/User';
+import Room from 'src/pages/RoomMgt/Room';
+import Equipment from 'src/pages/EquipmentMgt/Equipment';
 import NotFound from './pages/Page404';
 //
 import { useContext } from "react";
