@@ -31,7 +31,6 @@ export default function User() {
   const loadUserList = async () => {
     await getUsers()
       .then((response) => {
-        // console.log(response.data);
         setUserItems(response.data);
       });
   }

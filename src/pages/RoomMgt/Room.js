@@ -27,7 +27,7 @@ import * as yup from 'yup';
 export default function Room() {
 
   const [roomList, setRoomList] = useState([]);
-
+  
   const loadRoomList = async () => {
     await getRooms()
       .then((response) => {
@@ -35,7 +35,7 @@ export default function Room() {
         setRoomList(response.data);
       });
   }
-
+  
   useEffect(() => {
     loadRoomList();
   }, []);
@@ -239,7 +239,7 @@ export default function Room() {
       for (let x in roomList) {
         let roomNameList = roomList[x].room_name
         if (values.room_name === roomNameList) {
-          if (values.room_name != roomNameList) {
+          if (values.room_name !== roomNameList) {
             setErrors({ room_name: 'Room Name in used' });
             resetControl = false;
           }
@@ -277,7 +277,6 @@ export default function Room() {
         <Card>
           {/* Toolbar */}
           <EnchancedToolbar
-
             filterName={filterName}
             onFilterName={handleFilterByName}
           />
@@ -303,7 +302,6 @@ export default function Room() {
                     >
                       <TableCell component="th" scope="row" padding="normal" >
                         <Stack direction="row" alignItems="center" spacing={5}>
-                          <Avatar alt={row.room_name} src='/static/user.png' />
                           <Typography variant="subtitle2" noWrap >
                             {row.room_name}
                           </Typography>

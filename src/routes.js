@@ -1,20 +1,18 @@
 import { Navigate, useRoutes } from 'react-router-dom';
 // layouts
 import DashboardLayout from 'src/layouts/dashboard';
-import LogoOnlyLayout from './layouts/LogoOnlyLayout';
+import LogoOnlyLayout from 'src/layouts/LogoOnlyLayout';
 //
-import Login from './pages/Login';
-// import Register from './pages/Register';
-import DashboardApp from './pages/DashboardApp';
-// import Products from './pages/Products';
-import Form from './pages/Form';
+import Login from 'src/pages/Login';
+import Dashboard from 'src/pages/DashboardMgt/Dashboard';
+import Form from 'src/pages/Form';
 import User from 'src/pages/User';
 import Room from 'src/pages/RoomMgt/Room';
 import Equipment from 'src/pages/EquipmentMgt/Equipment';
-import NotFound from './pages/Page404';
+import NotFound from 'src/pages/Page404';
 //
 import { useContext } from "react";
-import AuthContext from "./services/auth.context";
+import AuthContext from "src/services/auth.context";
 // ----------------------------------------------------------------------
 export default function Router() {
   const authCtx = useContext(AuthContext)
@@ -24,7 +22,7 @@ export default function Router() {
       element: <DashboardLayout />,
       children: [
         { path: '/dashboard', element: <Navigate to="app" replace /> },
-        { path: 'app', element: <DashboardApp /> },
+        { path: 'app', element: <Dashboard /> },
         { path: 'user', element: <User /> },
         { path: 'form', element: <Form /> },
         { path: 'room', element: <Room /> },
@@ -55,7 +53,6 @@ export default function Router() {
     },
     { path: '*', element: <Navigate to="/404" replace /> }
   ]);
-  console.log(authCtx.isLoggedIn)
   if (authCtx.isLoggedIn) {
     return mainRoutes;
   } else {
