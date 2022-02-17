@@ -6,7 +6,7 @@ import plusFill from '@iconify/icons-eva/plus-fill';
 import editFill from '@iconify/icons-eva/edit-fill';
 // mui
 import {
-  Button, Card, Container, Stack, Table, TableBody, TableCell, TableContainer, TablePagination, TableRow, Typography, IconButton, Menu, MenuItem, ListItemIcon, ListItemText, Avatar,
+  Button, Card, Container, Stack, Table, TableBody, TableCell, TableContainer, TablePagination, TableRow, Typography, IconButton, Menu, MenuItem, ListItemIcon, ListItemText,
   Dialog, TextField, Box, CssBaseline
 } from '@mui/material';
 // react
@@ -27,7 +27,7 @@ import * as yup from 'yup';
 export default function Room() {
 
   const [roomList, setRoomList] = useState([]);
-  
+
   const loadRoomList = async () => {
     await getRooms()
       .then((response) => {
@@ -35,7 +35,7 @@ export default function Room() {
         setRoomList(response.data);
       });
   }
-  
+
   useEffect(() => {
     loadRoomList();
   }, []);
