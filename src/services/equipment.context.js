@@ -27,3 +27,13 @@ export const disableEquipment = (id) => {
       })
   )
 }
+export const createEquipment = (equipment_name, equipment_code, room) => {
+  return (
+    axiosInstance
+      .post('register/', {
+        equipment_name: equipment_name,
+        equipment_code: equipment_code,
+        room: room
+      })
+  )
+}

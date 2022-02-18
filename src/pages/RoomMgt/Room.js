@@ -14,7 +14,7 @@ import { useEffect, useState } from 'react';
 // router
 import Page from 'src/components/Page';
 // api
-import { getRooms, checkRoom, activeRoom, disableRoom, createRoom, updateRoom } from 'src/services/room.context';
+import { getRooms, checkRoom, activeRoom, disableRoom, createRoom, updateRoom, deleteRoom } from 'src/services/room.context';
 import Label from 'src/components/Label';
 import EnhancedTableHead from 'src/components/EnchancedTableHead';
 import { filter } from 'lodash';
@@ -160,7 +160,6 @@ export default function Room() {
       .required('Room Name is required'),
     location: yup
       .string('Enter Location')
-      .required('Location is required'),
   });
 
   const formik = useFormik({
@@ -186,7 +185,7 @@ export default function Room() {
         await createRoom(room_name, location);
         await loadRoomList();
         resetForm();
-        handleEditClose();
+        handleAddClose();
       }
     },
   });
@@ -222,7 +221,6 @@ export default function Room() {
       .required('Room name is required'),
     location: yup
       .string('Enter Location')
-      .required('Location is required'),
   });
 
   // edit room form
@@ -256,7 +254,10 @@ export default function Room() {
       }
     },
   });
-
+  const handleDeleteRoom = async (id) => {
+    await deleteRoom(id);
+    await loadRoomList();
+  }
   return (
     <Page title="Room">
       <Container>
@@ -272,7 +273,6 @@ export default function Room() {
             New Room
           </Button>
         </Stack>
-
         {/* main */}
         <Card>
           {/* Toolbar */}
@@ -358,6 +358,12 @@ export default function Room() {
                             </ListItemIcon>
                             <ListItemText primary="Edit" primaryTypographyProps={{ variant: 'body2' }} />
                           </MenuItem>
+                          <MenuItem sx={{ color: 'text.secondary' }} onClick={() => { handleDeleteRoom(row.id) }}>
+                            <ListItemIcon>
+                              <Icon icon={trash2Outline} width={24} height={24} />
+                            </ListItemIcon>
+                            <ListItemText primary="Delete" primaryTypographyProps={{ variant: 'body2' }} />
+                          </MenuItem>
                         </Menu>
                       </TableCell>
                     </TableRow>
@@ -425,7 +431,6 @@ export default function Room() {
                 />
                 <TextField
                   margin="normal"
-                  required
                   fullWidth
                   name="location"
                   label="Location"
@@ -484,7 +489,6 @@ export default function Room() {
               />
               <TextField
                 margin="normal"
-                required
                 fullWidth
                 name="location"
                 label="Location"

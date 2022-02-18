@@ -7,7 +7,7 @@ import editFill from '@iconify/icons-eva/edit-fill';
 // mui
 import {
   Button, Card, Container, Stack, Table, TableBody, TableCell, TableContainer, TablePagination, TableRow, Typography, IconButton, Menu, MenuItem, ListItemIcon, ListItemText,
-  Dialog, TextField, Box, CssBaseline
+  Dialog, TextField, Box, CssBaseline, Autocomplete
 } from '@mui/material';
 // react
 import { useEffect, useState } from 'react';
@@ -15,7 +15,7 @@ import { useEffect, useState } from 'react';
 import Page from 'src/components/Page';
 // api
 import { getRooms, checkRoom, activeRoom, disableRoom, createRoom, updateRoom } from 'src/services/room.context';
-import { getEquipments, checkEquipment, activeEquipment, disableEquipment } from 'src/services/equipment.context';
+import { getEquipments, checkEquipment, activeEquipment, disableEquipment, createEquipment } from 'src/services/equipment.context';
 import Label from 'src/components/Label';
 import EnhancedTableHead from 'src/components/EnchancedTableHead';
 import { filter } from 'lodash';
@@ -26,6 +26,16 @@ import { useFormik } from 'formik';
 import * as yup from 'yup';
 
 export default function Equipment() {
+
+  const [roomList, setRoomList] = useState([]);
+
+  const loadRoomList = async () => {
+    await getRooms()
+      .then((response) => {
+        console.log(response.data);
+        setRoomList(response.data);
+      });
+  }
 
   const [equipmentList, setEquipmentList] = useState([]);
 
@@ -38,6 +48,7 @@ export default function Equipment() {
   }
 
   useEffect(() => {
+
     loadEquipmentList();
   }, []);
 
@@ -47,7 +58,7 @@ export default function Equipment() {
   const [orderBy, setOrderBy] = useState('equipment_name');
 
   const TABLE_HEAD = [
-    { id: 'equipment_name', label: 'Room Name', alignRight: false },
+    { id: 'equipment_name', label: 'Equipment Name', alignRight: false },
     { id: 'equipment_code', label: 'Equipment Code', alignRight: false },
     { id: 'room', label: 'Room', alignRight: false },
     { id: 'is_active', label: 'Status', alignRight: false },
@@ -147,13 +158,141 @@ export default function Equipment() {
   // add equipment
   const [addOpen, setAddOpen] = useState(false);
   const handleAddClick = () => {
+    loadRoomList();
     setAddOpen(true);
   };
   const handleAddClose = () => {
     setAddOpen(false);
   };
 
-  // add equipment form 
+  const top100Films = [
+    { label: 'The Shawshank Redemption', year: 1994 },
+    { label: 'The Godfather', year: 1972 },
+    { label: 'The Godfather: Part II', year: 1974 },
+    { label: 'The Dark Knight', year: 2008 },
+    { label: '12 Angry Men', year: 1957 },
+    { label: "Schindler's List", year: 1993 },
+    { label: 'Pulp Fiction', year: 1994 },
+    {
+      label: 'The Lord of the Rings: The Return of the King',
+      year: 2003,
+    },
+    { label: 'The Good, the Bad and the Ugly', year: 1966 },
+    { label: 'Fight Club', year: 1999 },
+    {
+      label: 'The Lord of the Rings: The Fellowship of the Ring',
+      year: 2001,
+    },
+    {
+      label: 'Star Wars: Episode V - The Empire Strikes Back',
+      year: 1980,
+    },
+    { label: 'Forrest Gump', year: 1994 },
+    { label: 'Inception', year: 2010 },
+    {
+      label: 'The Lord of the Rings: The Two Towers',
+      year: 2002,
+    },
+    { label: "One Flew Over the Cuckoo's Nest", year: 1975 },
+    { label: 'Goodfellas', year: 1990 },
+    { label: 'The Matrix', year: 1999 },
+    { label: 'Seven Samurai', year: 1954 },
+    {
+      label: 'Star Wars: Episode IV - A New Hope',
+      year: 1977,
+    },
+    { label: 'City of God', year: 2002 },
+    { label: 'Se7en', year: 1995 },
+    { label: 'The Silence of the Lambs', year: 1991 },
+    { label: "It's a Wonderful Life", year: 1946 },
+    { label: 'Life Is Beautiful', year: 1997 },
+    { label: 'The Usual Suspects', year: 1995 },
+    { label: 'Léon: The Professional', year: 1994 },
+    { label: 'Spirited Away', year: 2001 },
+    { label: 'Saving Private Ryan', year: 1998 },
+    { label: 'Once Upon a Time in the West', year: 1968 },
+    { label: 'American History X', year: 1998 },
+    { label: 'Interstellar', year: 2014 },
+    { label: 'Casablanca', year: 1942 },
+    { label: 'City Lights', year: 1931 },
+    { label: 'Psycho', year: 1960 },
+    { label: 'The Green Mile', year: 1999 },
+    { label: 'The Intouchables', year: 2011 },
+    { label: 'Modern Times', year: 1936 },
+    { label: 'Raiders of the Lost Ark', year: 1981 },
+    { label: 'Rear Window', year: 1954 },
+    { label: 'The Pianist', year: 2002 },
+    { label: 'The Departed', year: 2006 },
+    { label: 'Terminator 2: Judgment Day', year: 1991 },
+    { label: 'Back to the Future', year: 1985 },
+    { label: 'Whiplash', year: 2014 },
+    { label: 'Gladiator', year: 2000 },
+    { label: 'Memento', year: 2000 },
+    { label: 'The Prestige', year: 2006 },
+    { label: 'The Lion King', year: 1994 },
+    { label: 'Apocalypse Now', year: 1979 },
+    { label: 'Alien', year: 1979 },
+    { label: 'Sunset Boulevard', year: 1950 },
+    {
+      label: 'Dr. Strangelove or: How I Learned to Stop Worrying and Love the Bomb',
+      year: 1964,
+    },
+    { label: 'The Great Dictator', year: 1940 },
+    { label: 'Cinema Paradiso', year: 1988 },
+    { label: 'The Lives of Others', year: 2006 },
+    { label: 'Grave of the Fireflies', year: 1988 },
+    { label: 'Paths of Glory', year: 1957 },
+    { label: 'Django Unchained', year: 2012 },
+    { label: 'The Shining', year: 1980 },
+    { label: 'WALL·E', year: 2008 },
+    { label: 'American Beauty', year: 1999 },
+    { label: 'The Dark Knight Rises', year: 2012 },
+    { label: 'Princess Mononoke', year: 1997 },
+    { label: 'Aliens', year: 1986 },
+    { label: 'Oldboy', year: 2003 },
+    { label: 'Once Upon a Time in America', year: 1984 },
+    { label: 'Witness for the Prosecution', year: 1957 },
+    { label: 'Das Boot', year: 1981 },
+    { label: 'Citizen Kane', year: 1941 },
+    { label: 'North by Northwest', year: 1959 },
+    { label: 'Vertigo', year: 1958 },
+    {
+      label: 'Star Wars: Episode VI - Return of the Jedi',
+      year: 1983,
+    },
+    { label: 'Reservoir Dogs', year: 1992 },
+    { label: 'Braveheart', year: 1995 },
+    { label: 'M', year: 1931 },
+    { label: 'Requiem for a Dream', year: 2000 },
+    { label: 'Amélie', year: 2001 },
+    { label: 'A Clockwork Orange', year: 1971 },
+    { label: 'Like Stars on Earth', year: 2007 },
+    { label: 'Taxi Driver', year: 1976 },
+    { label: 'Lawrence of Arabia', year: 1962 },
+    { label: 'Double Indemnity', year: 1944 },
+    {
+      label: 'Eternal Sunshine of the Spotless Mind',
+      year: 2004,
+    },
+    { label: 'Amadeus', year: 1984 },
+    { label: 'To Kill a Mockingbird', year: 1962 },
+    { label: 'Toy Story 3', year: 2010 },
+    { label: 'Logan', year: 2017 },
+    { label: 'Full Metal Jacket', year: 1987 },
+    { label: 'Dangal', year: 2016 },
+    { label: 'The Sting', year: 1973 },
+    { label: '2001: A Space Odyssey', year: 1968 },
+    { label: "Singin' in the Rain", year: 1952 },
+    { label: 'Toy Story', year: 1995 },
+    { label: 'Bicycle Thieves', year: 1948 },
+    { label: 'The Kid', year: 1921 },
+    { label: 'Inglourious Basterds', year: 2009 },
+    { label: 'Snatch', year: 2000 },
+    { label: '3 Idiots', year: 2009 },
+    { label: 'Monty Python and the Holy Grail', year: 1975 },
+  ];
+
+  // create equipment form 
   const validationSchema = yup.object({
     equipment_name: yup
       .string('Enter Equipment Name')
@@ -161,7 +300,7 @@ export default function Equipment() {
     equipment_code: yup
       .string('Enter Equipment Code')
       .required('Equipment Code is required'),
-    room: yup
+    room_id: yup
       .string('Enter Room')
       .required('Room is required'),
   });
@@ -170,24 +309,32 @@ export default function Equipment() {
     initialValues: {
       equipment_name: '',
       equipment_code: '',
-      room: '',
+      room_id: '',
     },
     validationSchema: validationSchema,
     onSubmit: async (values, { resetForm, setSubmitting, setErrors }) => {
       setSubmitting(false);
       let resetControl = true;
       for (let x in equipmentList) {
-        console.log(equipmentList[x].equipment_name)
-        let roomNameList = equipmentList[x].equipment_name
-        if (values.equipment_name === roomNameList) {
-          setErrors({ equipment_name: 'Room Name in used' });
+        // console.log(equipmentList[x].equipment_name)
+        let equipmentNameList = equipmentList[x].equipment_name
+        if (values.equipment_name === equipmentNameList) {
+          setErrors({ equipment_name: 'Equipment Name in used' });
+          resetControl = false;
+        }
+        let equipmentCodeList = equipmentList[x].equipment_code
+        if (values.equipment_code === equipmentCodeList) {
+          setErrors({ equipment_code: 'Equipment Code in used' });
           resetControl = false;
         }
       }
+      console.log(values.room_id)
       if (resetControl) {
         const equipment_name = values.equipment_name;
         const equipment_code = values.equipment_code;
-        await createRoom(equipment_name, equipment_code);
+        const room_id = values.room_id;
+
+        // await createEquipment(equipment_name, equipment_code, room_id);
         await loadEquipmentList();
         resetForm();
         handleEditClose();
@@ -262,18 +409,18 @@ export default function Equipment() {
   });
 
   return (
-    <Page title="Room">
+    <Page title="Equipment">
       <Container>
         <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5}>
           <Typography variant="h4" gutterBottom>
-            Room
+            Equipment
           </Typography>
           <Button
             variant="contained"
             onClick={handleAddClick}
             startIcon={<Icon icon={plusFill} />}
           >
-            New Room
+            New Equipment
           </Button>
         </Stack>
 
@@ -301,7 +448,7 @@ export default function Equipment() {
                   .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                   .map((row) => (
                     <TableRow
-                      key={row.id}
+                      key={row.equipment_id}
                       sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
                     >
                       <TableCell component="th" scope="row" padding="normal" >
@@ -312,7 +459,7 @@ export default function Equipment() {
                         </Stack>
                       </TableCell>
                       <TableCell align="left">{row.equipment_code}</TableCell>
-                      <TableCell align="left">{row.room.room_name}</TableCell>
+                      <TableCell align="left">{row.room_name}</TableCell>
                       <TableCell align="left">
                         <Label
                           variant="ghost"
@@ -433,7 +580,7 @@ export default function Equipment() {
                   required
                   fullWidth
                   name="equipment_code"
-                  label="Equipment_code"
+                  label="Equipment Code"
                   type="equipment_code"
                   id="equipment_code"
                   autoComplete="current-equipment_code"
@@ -441,6 +588,24 @@ export default function Equipment() {
                   onChange={formik.handleChange}
                   error={formik.touched.equipment_code && Boolean(formik.errors.equipment_code)}
                   helperText={formik.touched.equipment_code && formik.errors.equipment_code}
+                />
+                <Autocomplete
+                  id="room_id"
+                  name="room_id"
+                  freeSolo
+                  fullWidth
+                  disableClearable
+                  required
+                  options={roomList.map((option) => option.room_name)}
+                  renderInput={(params) => <TextField
+                    {...params}
+                    label="Room"
+                    margin="normal"
+                    error={formik.touched.room_id && Boolean(formik.errors.room_id)}
+                    value={formik.values.room_id}
+                    helperText={formik.touched.room_id && formik.errors.room_id}
+                    onChange={formik.handleChange}
+                  />}
                 />
                 <Button
                   type="submit"

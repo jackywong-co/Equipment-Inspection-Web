@@ -41,12 +41,17 @@ export const createRoom = (room_name, location) => {
   )
 }
 export const updateRoom = (id, room_name, location) => {
-  console.log(location)
   return (
     axiosInstance
       .put('room/' + id + '/', {
         room_name: room_name,
         location: location
       })
+  )
+}
+export const deleteRoom = (id) => {
+  return (
+    axiosInstance
+      .delete('room/' + id + '/')
   )
 }
