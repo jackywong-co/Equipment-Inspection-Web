@@ -1,6 +1,6 @@
 import axiosInstance from "./axios.instance";
 
-export const getEquipment = () => {
+export const getEquipments = () => {
   return (
     axiosInstance
       .get('equipment/'))

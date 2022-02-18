@@ -15,6 +15,7 @@ import { useEffect, useState } from 'react';
 import Page from 'src/components/Page';
 // api
 import { getRooms, checkRoom, activeRoom, disableRoom, createRoom, updateRoom } from 'src/services/room.context';
+import { getEquipments, checkEquipment, activeEquipment, disableEquipment } from 'src/services/equipment.context';
 import Label from 'src/components/Label';
 import EnhancedTableHead from 'src/components/EnchancedTableHead';
 import { filter } from 'lodash';
@@ -24,30 +25,31 @@ import SearchNotFound from 'src/components/SearchNotFound';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
 
-export default function Room() {
+export default function Equipment() {
 
-  const [roomList, setRoomList] = useState([]);
+  const [equipmentList, setEquipmentList] = useState([]);
 
-  const loadRoomList = async () => {
-    await getRooms()
+  const loadEquipmentList = async () => {
+    await getEquipments()
       .then((response) => {
-        // console.log(response.data);
-        setRoomList(response.data);
+        console.log(response.data);
+        setEquipmentList(response.data);
       });
   }
 
   useEffect(() => {
-    loadRoomList();
+    loadEquipmentList();
   }, []);
 
 
   // table header
   const [order, setOrder] = useState('asc');
-  const [orderBy, setOrderBy] = useState('room_name');
+  const [orderBy, setOrderBy] = useState('equipment_name');
 
   const TABLE_HEAD = [
-    { id: 'room_name', label: 'Room Name', alignRight: false },
-    { id: 'location', label: 'Location', alignRight: false },
+    { id: 'equipment_name', label: 'Room Name', alignRight: false },
+    { id: 'equipment_code', label: 'Equipment Code', alignRight: false },
+    { id: 'room', label: 'Room', alignRight: false },
     { id: 'is_active', label: 'Status', alignRight: false },
     { id: '' }
   ];
@@ -76,7 +78,7 @@ export default function Room() {
       return a[1] - b[1];
     });
     if (query) {
-      return filter(array, (user) => user.room_name.toLowerCase().indexOf(query.toLowerCase()) !== -1);
+      return filter(array, (equipment) => equipment.equipment_name.toLowerCase().indexOf(query.toLowerCase()) !== -1);
     }
     return stabilizedThis.map((el) => el[0]);
   }
@@ -87,14 +89,12 @@ export default function Room() {
     setOrderBy(property);
   };
 
-
-
   // toolbar
   const [filterName, setFilterName] = useState('');
   const handleFilterByName = (event) => {
     setFilterName(event.target.value);
   };
-  const filteredUsers = applySortFilter(roomList, getComparator(order, orderBy), filterName);
+  const filteredUsers = applySortFilter(equipmentList, getComparator(order, orderBy), filterName);
   const isUserNotFound = filteredUsers.length === 0;
 
   // TablePagination
@@ -107,7 +107,7 @@ export default function Room() {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
   };
-  const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - roomList.length) : 0;
+  const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - equipmentList.length) : 0;
   // more menu
   const [anchorEl, setAnchorEl] = useState(null);
   const handleElClick = (inputFormId, event) => {
@@ -122,29 +122,29 @@ export default function Room() {
     setAnchorEl(null);
   };
 
-  // check room is active
-  const [roomStatus, setRoomStatus] = useState();
+  // check equipment is active
+  const [equipmentStatus, setEquipmentStatus] = useState();
   const checkCheckStatus = (id) => {
-    checkRoom(id)
+    checkEquipment(id)
       .then((response) => {
-        setRoomStatus(response.data.is_active)
+        setEquipmentStatus(response.data.is_active)
       })
   }
-  // active room
-  const handleActiveRoom = async (id) => {
-    await activeRoom(id)
-    await loadRoomList()
+  // active equipment
+  const handleActiveEquipment = async (id) => {
+    await activeEquipment(id)
+    await loadEquipmentList()
     handleElClose();
   }
 
-  // disable room
-  const handleDisableRoom = async (id) => {
-    await disableRoom(id)
-    await loadRoomList()
+  // disable equipment
+  const handleDisableEquipment = async (id) => {
+    await disableEquipment(id)
+    await loadEquipmentList()
     handleElClose();
   };
 
-  // add room
+  // add equipment
   const [addOpen, setAddOpen] = useState(false);
   const handleAddClick = () => {
     setAddOpen(true);
@@ -153,38 +153,42 @@ export default function Room() {
     setAddOpen(false);
   };
 
-  // add room form 
+  // add equipment form 
   const validationSchema = yup.object({
-    room_name: yup
-      .string('Enter Room Name')
-      .required('Room Name is required'),
-    location: yup
-      .string('Enter Location')
-      .required('Location is required'),
+    equipment_name: yup
+      .string('Enter Equipment Name')
+      .required('Equipment Name is required'),
+    equipment_code: yup
+      .string('Enter Equipment Code')
+      .required('Equipment Code is required'),
+    room: yup
+      .string('Enter Room')
+      .required('Room is required'),
   });
 
   const formik = useFormik({
     initialValues: {
-      room_name: '',
-      location: '',
+      equipment_name: '',
+      equipment_code: '',
+      room: '',
     },
     validationSchema: validationSchema,
     onSubmit: async (values, { resetForm, setSubmitting, setErrors }) => {
       setSubmitting(false);
       let resetControl = true;
-      for (let x in roomList) {
-        console.log(roomList[x].room_name)
-        let roomNameList = roomList[x].room_name
-        if (values.room_name === roomNameList) {
-          setErrors({ room_name: 'Room Name in used' });
+      for (let x in equipmentList) {
+        console.log(equipmentList[x].equipment_name)
+        let roomNameList = equipmentList[x].equipment_name
+        if (values.equipment_name === roomNameList) {
+          setErrors({ equipment_name: 'Room Name in used' });
           resetControl = false;
         }
       }
       if (resetControl) {
-        const room_name = values.room_name;
-        const location = values.location;
-        await createRoom(room_name, location);
-        await loadRoomList();
+        const equipment_name = values.equipment_name;
+        const equipment_code = values.equipment_code;
+        await createRoom(equipment_name, equipment_code);
+        await loadEquipmentList();
         resetForm();
         handleEditClose();
       }
@@ -194,19 +198,19 @@ export default function Room() {
   // edit room
   const [editRoom, setEditRoom] = useState({
     id: '',
-    room_name: '',
-    location: ''
+    equipment_name: '',
+    equipment_code: ''
   });
   const [editOpen, setEditOpen] = useState(false);
   const handleEditClick = (id) => {
-    for (let x in roomList) {
-      if (id === roomList[x].id) {
-        let room_name = roomList[x].room_name;
-        let location = roomList[x].location;
+    for (let x in equipmentList) {
+      if (id === equipmentList[x].id) {
+        let equipment_name = equipmentList[x].equipment_name;
+        let equipment_code = equipmentList[x].equipment_code;
         setEditRoom({
           id: id,
-          room_name: room_name,
-          location: location
+          equipment_name: equipment_name,
+          equipment_code: equipment_code
         });
       }
     }
@@ -217,40 +221,40 @@ export default function Room() {
     setEditOpen(false);
   };
   const editValidationSchema = yup.object({
-    room_name: yup
+    equipment_name: yup
       .string('Enter Room Name')
       .required('Room name is required'),
-    location: yup
-      .string('Enter Location')
-      .required('Location is required'),
+    equipment_code: yup
+      .string('Enter Equipment_code')
+      .required('Equipment_code is required'),
   });
 
   // edit room form
   const editUserFormik = useFormik({
     enableReinitialize: true,
     initialValues: {
-      room_name: editRoom.room_name,
-      location: editRoom.location,
+      equipment_name: editRoom.equipment_name,
+      equipment_code: editRoom.equipment_code,
     },
     validationSchema: editValidationSchema,
     onSubmit: async (values, { resetForm, setSubmitting, setErrors }) => {
       setSubmitting(false);
       let resetControl = true;
-      for (let x in roomList) {
-        let roomNameList = roomList[x].room_name
-        if (values.room_name === roomNameList) {
-          if (values.room_name !== roomNameList) {
-            setErrors({ room_name: 'Room Name in used' });
+      for (let x in equipmentList) {
+        let roomNameList = equipmentList[x].equipment_name
+        if (values.equipment_name === roomNameList) {
+          if (values.equipment_name !== roomNameList) {
+            setErrors({ equipment_name: 'Room Name in used' });
             resetControl = false;
           }
         }
       }
       if (resetControl) {
         const id = editRoom.id;
-        const room_name = values.room_name;
-        const location = values.location;
-        await updateRoom(id, room_name, location);
-        await loadRoomList();
+        const equipment_name = values.equipment_name;
+        const equipment_code = values.equipment_code;
+        await updateRoom(id, equipment_name, equipment_code);
+        await loadEquipmentList();
         resetForm();
         handleEditClose();
       }
@@ -288,7 +292,7 @@ export default function Room() {
                 order={order}
                 orderBy={orderBy}
                 headLabel={TABLE_HEAD}
-                rowCount={roomList.length}
+                rowCount={equipmentList.length}
                 onRequestSort={handleRequestSort}
               />
               {/* table body */}
@@ -303,11 +307,12 @@ export default function Room() {
                       <TableCell component="th" scope="row" padding="normal" >
                         <Stack direction="row" alignItems="center" spacing={5}>
                           <Typography variant="subtitle2" noWrap >
-                            {row.room_name}
+                            {row.equipment_name}
                           </Typography>
                         </Stack>
                       </TableCell>
-                      <TableCell align="left">{row.location}</TableCell>
+                      <TableCell align="left">{row.equipment_code}</TableCell>
+                      <TableCell align="left">{row.room.room_name}</TableCell>
                       <TableCell align="left">
                         <Label
                           variant="ghost"
@@ -336,16 +341,16 @@ export default function Room() {
                           transformOrigin={{ vertical: 'top', horizontal: 'right' }}
 
                         >
-                          {roomStatus
+                          {equipmentStatus
                             ?
-                            <MenuItem sx={{ color: 'text.secondary' }} onClick={() => { handleDisableRoom(row.id) }}>
+                            <MenuItem sx={{ color: 'text.secondary' }} onClick={() => { handleDisableEquipment(row.id) }}>
                               <ListItemIcon>
                                 <Icon icon={trash2Outline} width={24} height={24} />
                               </ListItemIcon>
                               <ListItemText primary="Disable" primaryTypographyProps={{ variant: 'body2' }} />
                             </MenuItem>
                             :
-                            <MenuItem sx={{ color: 'text.secondary' }} onClick={() => { handleActiveRoom(row.id) }}>
+                            <MenuItem sx={{ color: 'text.secondary' }} onClick={() => { handleActiveEquipment(row.id) }}>
                               <ListItemIcon>
                                 <Icon icon={trash2Outline} width={24} height={24} />
                               </ListItemIcon>
@@ -383,7 +388,7 @@ export default function Room() {
             <TablePagination
               rowsPerPageOptions={[5, 10, 25]}
               component="div"
-              count={roomList.length}
+              count={equipmentList.length}
               rowsPerPage={rowsPerPage}
               page={page}
               onPageChange={handleChangePage}
@@ -413,29 +418,29 @@ export default function Room() {
                   margin="normal"
                   required
                   fullWidth
-                  id="room_name"
+                  id="equipment_name"
                   label="Room Name"
-                  name="room_name"
-                  autoComplete="room_name"
-                  value={formik.values.room_name}
+                  name="equipment_name"
+                  autoComplete="equipment_name"
+                  value={formik.values.equipment_name}
                   onChange={formik.handleChange}
-                  error={formik.touched.room_name && Boolean(formik.errors.room_name)}
-                  helperText={formik.touched.room_name && formik.errors.room_name}
+                  error={formik.touched.equipment_name && Boolean(formik.errors.equipment_name)}
+                  helperText={formik.touched.equipment_name && formik.errors.equipment_name}
                   autoFocus
                 />
                 <TextField
                   margin="normal"
                   required
                   fullWidth
-                  name="location"
-                  label="Location"
-                  type="location"
-                  id="location"
-                  autoComplete="current-location"
-                  value={formik.values.location}
+                  name="equipment_code"
+                  label="Equipment_code"
+                  type="equipment_code"
+                  id="equipment_code"
+                  autoComplete="current-equipment_code"
+                  value={formik.values.equipment_code}
                   onChange={formik.handleChange}
-                  error={formik.touched.location && Boolean(formik.errors.location)}
-                  helperText={formik.touched.location && formik.errors.location}
+                  error={formik.touched.equipment_code && Boolean(formik.errors.equipment_code)}
+                  helperText={formik.touched.equipment_code && formik.errors.equipment_code}
                 />
                 <Button
                   type="submit"
@@ -473,28 +478,28 @@ export default function Room() {
                 margin="normal"
                 required
                 fullWidth
-                id="room_name"
+                id="equipment_name"
                 label="Room Name"
-                name="room_name"
-                autoComplete="room_name"
-                value={editUserFormik.values.room_name}
+                name="equipment_name"
+                autoComplete="equipment_name"
+                value={editUserFormik.values.equipment_name}
                 onChange={editUserFormik.handleChange}
-                error={editUserFormik.touched.room_name && Boolean(editUserFormik.errors.room_name)}
-                helperText={editUserFormik.touched.room_name && editUserFormik.errors.room_name}
+                error={editUserFormik.touched.equipment_name && Boolean(editUserFormik.errors.equipment_name)}
+                helperText={editUserFormik.touched.equipment_name && editUserFormik.errors.equipment_name}
               />
               <TextField
                 margin="normal"
                 required
                 fullWidth
-                name="location"
-                label="Location"
-                type="location"
-                id="location"
-                autoComplete="current-location"
-                value={editUserFormik.values.location}
+                name="equipment_code"
+                label="Equipment_code"
+                type="equipment_code"
+                id="equipment_code"
+                autoComplete="current-equipment_code"
+                value={editUserFormik.values.equipment_code}
                 onChange={editUserFormik.handleChange}
-                error={editUserFormik.touched.location && Boolean(editUserFormik.errors.location)}
-                helperText={editUserFormik.touched.location && editUserFormik.errors.location}
+                error={editUserFormik.touched.equipment_code && Boolean(editUserFormik.errors.equipment_code)}
+                helperText={editUserFormik.touched.equipment_code && editUserFormik.errors.equipment_code}
               />
               <Button
                 type="submit"
