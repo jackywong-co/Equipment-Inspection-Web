@@ -9,6 +9,7 @@ import Form from 'src/pages/Form';
 import User from 'src/pages/User';
 import Room from 'src/pages/RoomMgt/Room';
 import Equipment from 'src/pages/EquipmentMgt/Equipment';
+import Question from 'src/pages/QuestionMgt/Question';
 import NotFound from 'src/pages/Page404';
 //
 import { useContext } from "react";
@@ -26,7 +27,8 @@ export default function Router() {
         { path: 'user', element: <User /> },
         { path: 'form', element: <Form /> },
         { path: 'room', element: <Room /> },
-        { path: 'equipment', element: <Equipment /> }
+        { path: 'equipment', element: <Equipment /> },
+        { path: 'question', element: <Question /> }
       ]
     },
     {

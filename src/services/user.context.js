@@ -46,3 +46,9 @@ export const createUser = (username, password, is_staff) => {
       })
   )
 }
+export const deleteUser = (id) => {
+  return (
+    axiosInstance
+      .delete('user/' + id + '/')
+  )
+}

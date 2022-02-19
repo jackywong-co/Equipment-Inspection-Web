@@ -14,7 +14,7 @@ import { useEffect, useState } from 'react';
 // router
 import Page from '../components/Page';
 // api
-import { getUsers, activeUser, disableUser, checkUser, createUser, updateUser } from '../services/user.context';
+import { getUsers, activeUser, disableUser, checkUser, createUser, updateUser,deleteUser} from '../services/user.context';
 import Label from '../components/Label';
 import EnhancedTableHead from '../components/EnchancedTableHead';
 import { filter } from 'lodash';
@@ -131,11 +131,10 @@ export default function User() {
   }
 
   // disable user
-  const handleDisableUser = async (id) => {
-    await disableUser(id)
-    await loadUserList()
-    handleElClose();
-  };
+  const handleDeleteUser = async (id) => {
+    await deleteUser(id);
+    await loadUserList();
+  }
 
   // add user
   const [addOpen, setAddOpen] = useState(false);
@@ -193,6 +192,7 @@ export default function User() {
         await createUser(username, password, role);
         await loadUserList();
         resetForm();
+        handleAddClose();
       }
     },
   });
@@ -258,7 +258,12 @@ export default function User() {
       }
     },
   });
-
+  // disable user
+  const handleDisableUser = async (id) => {
+    await disableUser(id)
+    await loadUserList()
+    handleElClose();
+  };
   return (
     <Page title="User">
       <Container>
@@ -360,6 +365,12 @@ export default function User() {
                               <Icon icon={editFill} width={24} height={24} />
                             </ListItemIcon>
                             <ListItemText primary="Edit" primaryTypographyProps={{ variant: 'body2' }} />
+                          </MenuItem>
+                          <MenuItem sx={{ color: 'text.secondary' }} onClick={() => { handleDeleteUser(row.id) }}>
+                            <ListItemIcon>
+                              <Icon icon={trash2Outline} width={24} height={24} />
+                            </ListItemIcon>
+                            <ListItemText primary="Delete" primaryTypographyProps={{ variant: 'body2' }} />
                           </MenuItem>
                         </Menu>
                       </TableCell>

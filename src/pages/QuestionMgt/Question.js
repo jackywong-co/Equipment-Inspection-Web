@@ -7,15 +7,14 @@ import editFill from '@iconify/icons-eva/edit-fill';
 // mui
 import {
   Button, Card, Container, Stack, Table, TableBody, TableCell, TableContainer, TablePagination, TableRow, Typography, IconButton, Menu, MenuItem, ListItemIcon, ListItemText,
-  Dialog, TextField, Box, CssBaseline, Autocomplete
+  Dialog, TextField, Box, CssBaseline
 } from '@mui/material';
 // react
 import { useEffect, useState } from 'react';
 // router
 import Page from 'src/components/Page';
 // api
-import { getRooms, checkRoom, activeRoom, disableRoom, createRoom, updateRoom } from 'src/services/room.context';
-import { getEquipments, checkEquipment, activeEquipment, disableEquipment, createEquipment, updateEquipment, deleteEquipment } from 'src/services/equipment.context';
+import { getRooms, checkRoom, activeRoom, disableRoom, createRoom, updateRoom, deleteRoom } from 'src/services/room.context';
 import Label from 'src/components/Label';
 import EnhancedTableHead from 'src/components/EnchancedTableHead';
 import { filter } from 'lodash';
@@ -25,40 +24,30 @@ import SearchNotFound from 'src/components/SearchNotFound';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
 
-export default function Equipment() {
+export default function Room() {
 
   const [roomList, setRoomList] = useState([]);
 
   const loadRoomList = async () => {
     await getRooms()
       .then((response) => {
+        // console.log(response.data);
         setRoomList(response.data);
       });
   }
 
-  const [equipmentList, setEquipmentList] = useState([]);
-
-  const loadEquipmentList = async () => {
-    await getEquipments()
-      .then((response) => {
-        setEquipmentList(response.data);
-      });
-  }
-
   useEffect(() => {
-
-    loadEquipmentList();
+    loadRoomList();
   }, []);
 
 
   // table header
   const [order, setOrder] = useState('asc');
-  const [orderBy, setOrderBy] = useState('equipment_name');
+  const [orderBy, setOrderBy] = useState('room_name');
 
   const TABLE_HEAD = [
-    { id: 'equipment_name', label: 'Equipment Name', alignRight: false },
-    { id: 'equipment_code', label: 'Equipment Code', alignRight: false },
-    { id: 'room', label: 'Room', alignRight: false },
+    { id: 'room_name', label: 'Room Name', alignRight: false },
+    { id: 'location', label: 'Location', alignRight: false },
     { id: 'is_active', label: 'Status', alignRight: false },
     { id: '' }
   ];
@@ -87,7 +76,7 @@ export default function Equipment() {
       return a[1] - b[1];
     });
     if (query) {
-      return filter(array, (equipment) => equipment.equipment_name.toLowerCase().indexOf(query.toLowerCase()) !== -1);
+      return filter(array, (user) => user.room_name.toLowerCase().indexOf(query.toLowerCase()) !== -1);
     }
     return stabilizedThis.map((el) => el[0]);
   }
@@ -98,12 +87,14 @@ export default function Equipment() {
     setOrderBy(property);
   };
 
+
+
   // toolbar
   const [filterName, setFilterName] = useState('');
   const handleFilterByName = (event) => {
     setFilterName(event.target.value);
   };
-  const filteredUsers = applySortFilter(equipmentList, getComparator(order, orderBy), filterName);
+  const filteredUsers = applySortFilter(roomList, getComparator(order, orderBy), filterName);
   const isUserNotFound = filteredUsers.length === 0;
 
   // TablePagination
@@ -116,7 +107,7 @@ export default function Equipment() {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
   };
-  const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - equipmentList.length) : 0;
+  const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - roomList.length) : 0;
   // more menu
   const [anchorEl, setAnchorEl] = useState(null);
   const handleElClick = (inputFormId, event) => {
@@ -124,7 +115,6 @@ export default function Equipment() {
       inputFormId,
       element: event.currentTarget
     };
-    loadRoomList();
     setAnchorEl(obj);
     checkCheckStatus(inputFormId)
   };
@@ -132,108 +122,90 @@ export default function Equipment() {
     setAnchorEl(null);
   };
 
-  // check equipment is active
-  const [equipmentStatus, setEquipmentStatus] = useState();
+  // check room is active
+  const [roomStatus, setRoomStatus] = useState();
   const checkCheckStatus = (id) => {
-    checkEquipment(id)
+    checkRoom(id)
       .then((response) => {
-        setEquipmentStatus(response.data.is_active)
+        setRoomStatus(response.data.is_active)
       })
   }
-  // active equipment
-  const handleActiveEquipment = async (id) => {
-    await activeEquipment(id)
-    await loadEquipmentList()
+  // active room
+  const handleActiveRoom = async (id) => {
+    await activeRoom(id)
+    await loadRoomList()
     handleElClose();
   }
 
-  // disable equipment
-  const handleDisableEquipment = async (id) => {
-    await disableEquipment(id)
-    await loadEquipmentList()
+  // disable room
+  const handleDisableRoom = async (id) => {
+    await disableRoom(id)
+    await loadRoomList()
     handleElClose();
   };
 
-  // add equipment
+  // add room
   const [addOpen, setAddOpen] = useState(false);
   const handleAddClick = () => {
-    loadRoomList();
     setAddOpen(true);
   };
   const handleAddClose = () => {
     setAddOpen(false);
   };
-  // create equipment form 
+
+  // add room form 
   const validationSchema = yup.object({
-    equipment_name: yup
-      .string('Enter Equipment Name')
-      .required('Equipment Name is required'),
-    equipment_code: yup
-      .string('Enter Equipment Code'),
-    room_id: yup
-      .string('Enter Room')
-      .required('Room is required'),
+    room_name: yup
+      .string('Enter Room Name')
+      .required('Room Name is required'),
+    location: yup
+      .string('Enter Location')
   });
 
   const formik = useFormik({
     initialValues: {
-      equipment_name: '',
-      equipment_code: '',
-      room_id: '',
+      room_name: '',
+      location: '',
     },
     validationSchema: validationSchema,
-    onSubmit: async (values, { resetForm, setSubmitting, setErrors, setFieldValue }) => {
+    onSubmit: async (values, { resetForm, setSubmitting, setErrors }) => {
       setSubmitting(false);
       let resetControl = true;
-      for (let x in equipmentList) {
-        // console.log(equipmentList[x].equipment_name)
-        let equipmentNameList = equipmentList[x].equipment_name
-        if (values.equipment_name === equipmentNameList) {
-          setErrors({ equipment_name: 'Equipment Name in used' });
-          resetControl = false;
-        }
-        let equipmentCodeList = equipmentList[x].equipment_code
-        if (values.equipment_code === equipmentCodeList && values.equipment_code !== '') {
-          setErrors({ equipment_code: 'Equipment Code in used' });
+      for (let x in roomList) {
+        console.log(roomList[x].room_name)
+        let roomNameList = roomList[x].room_name
+        if (values.room_name === roomNameList) {
+          setErrors({ room_name: 'Room Name in used' });
           resetControl = false;
         }
       }
       if (resetControl) {
-        const equipment_name = values.equipment_name;
-        const equipment_code = values.equipment_code;
-        const room_id = values.room_id;
-        await createEquipment(equipment_name, equipment_code, room_id);
-        await loadEquipmentList();
+        const room_name = values.room_name;
+        const location = values.location;
+        await createRoom(room_name, location);
+        await loadRoomList();
         resetForm();
         handleAddClose();
       }
     },
   });
 
-  // edit equipment
-  const [editEquipment, setEditEquipment] = useState({
+  // edit room
+  const [editRoom, setEditRoom] = useState({
     id: '',
-    equipment_name: '',
-    equipment_code: '',
-    room: {}
+    room_name: '',
+    location: ''
   });
   const [editOpen, setEditOpen] = useState(false);
   const handleEditClick = (id) => {
-    for (let x in equipmentList) {
-      if (id === equipmentList[x].equipment_id) {
-        let equipment_name = equipmentList[x].equipment_name;
-        let equipment_code = equipmentList[x].equipment_code;
-        let room
-        for (let y in roomList) {
-          if (equipmentList[x].room_id === roomList[y].id) {
-            room = roomList[y];
-          }
-        }
-        setEditEquipment({
+    for (let x in roomList) {
+      if (id === roomList[x].id) {
+        let room_name = roomList[x].room_name;
+        let location = roomList[x].location;
+        setEditRoom({
           id: id,
-          equipment_name: equipment_name,
-          equipment_code: equipment_code,
-          room: room
+          room_name: room_name,
+          location: location
         });
       }
     }
@@ -244,69 +216,63 @@ export default function Equipment() {
     setEditOpen(false);
   };
   const editValidationSchema = yup.object({
-    equipment_name: yup
-      .string('Enter Equipment Name')
-      .required('Equipment Name is required'),
-    equipment_code: yup
-      .string('Enter Equipment Code'),
+    room_name: yup
+      .string('Enter Room Name')
+      .required('Room name is required'),
+    location: yup
+      .string('Enter Location')
   });
-  const handleDeleteEquipment = async (id) => {
-    await deleteEquipment(id);
-    await loadEquipmentList();
-  }
-  // edit equipment form
+
+  // edit room form
   const editUserFormik = useFormik({
     enableReinitialize: true,
     initialValues: {
-      equipment_name: editEquipment.equipment_name,
-      equipment_code: editEquipment.equipment_code,
-      room: editEquipment.room
+      room_name: editRoom.room_name,
+      location: editRoom.location,
     },
     validationSchema: editValidationSchema,
     onSubmit: async (values, { resetForm, setSubmitting, setErrors }) => {
       setSubmitting(false);
       let resetControl = true;
-      for (let x in equipmentList) {
-        let equipmentNameList = equipmentList[x].equipment_name
-        if (values.equipment_name === equipmentNameList && values.equipment_name !== values.equipment_name) {
-          setErrors({ equipment_name: 'Equipment Name in used' });
-          resetControl = false;
-        }
-        let equipmentCodeList = equipmentList[x].equipment_code
-        if (values.equipment_code === equipmentCodeList && values.equipment_code !== values.equipment_code) {
-          setErrors({ equipment_code: 'Equipment Code in used' });
-          resetControl = false;
+      for (let x in roomList) {
+        let roomNameList = roomList[x].room_name
+        if (values.room_name === roomNameList) {
+          if (values.room_name !== roomNameList) {
+            setErrors({ room_name: 'Room Name in used' });
+            resetControl = false;
+          }
         }
       }
       if (resetControl) {
-        const id = editEquipment.id;
-        const equipment_name = values.equipment_name;
-        const equipment_code = values.equipment_code;
-        const room_id = values.room.id;
-        await updateEquipment(id, equipment_name, equipment_code, room_id);
-        await loadEquipmentList();
+        const id = editRoom.id;
+        const room_name = values.room_name;
+        const location = values.location;
+        await updateRoom(id, room_name, location);
+        await loadRoomList();
         resetForm();
         handleEditClose();
       }
     },
   });
-
+  const handleDeleteRoom = async (id) => {
+    await deleteRoom(id);
+    await loadRoomList();
+  }
   return (
-    <Page title="Equipment">
+    <Page title="Room">
       <Container>
         <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5}>
           <Typography variant="h4" gutterBottom>
-            Equipment
+            Room
           </Typography>
           <Button
             variant="contained"
             onClick={handleAddClick}
             startIcon={<Icon icon={plusFill} />}
           >
-            New Equipment
+            New Room
           </Button>
         </Stack>
-
         {/* main */}
         <Card>
           {/* Toolbar */}
@@ -322,7 +288,7 @@ export default function Equipment() {
                 order={order}
                 orderBy={orderBy}
                 headLabel={TABLE_HEAD}
-                rowCount={equipmentList.length}
+                rowCount={roomList.length}
                 onRequestSort={handleRequestSort}
               />
               {/* table body */}
@@ -331,18 +297,17 @@ export default function Equipment() {
                   .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                   .map((row) => (
                     <TableRow
-                      key={row.equipment_id}
+                      key={row.id}
                       sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
                     >
                       <TableCell component="th" scope="row" padding="normal" >
                         <Stack direction="row" alignItems="center" spacing={5}>
                           <Typography variant="subtitle2" noWrap >
-                            {row.equipment_name}
+                            {row.room_name}
                           </Typography>
                         </Stack>
                       </TableCell>
-                      <TableCell align="left">{row.equipment_code}</TableCell>
-                      <TableCell align="left">{row.room_name}</TableCell>
+                      <TableCell align="left">{row.location}</TableCell>
                       <TableCell align="left">
                         <Label
                           variant="ghost"
@@ -355,45 +320,45 @@ export default function Equipment() {
                         <IconButton
                           aria-label='more'
                           aria-controls="long-menu"
-                          aria-expanded={anchorEl != null && anchorEl.inputFormId === row.equipment_id ? 'true' : undefined}
+                          aria-expanded={anchorEl != null && anchorEl.inputFormId === row.id ? 'true' : undefined}
                           aria-haspopup="true"
-                          onClick={(e) => handleElClick(row.equipment_id, e)}
+                          onClick={(e) => handleElClick(row.id, e)}
                         >
                           <Icon icon={moreVerticalFill} width={20} height={20} />
                         </IconButton>
                         {/* more menu */}
                         <Menu
-                          id={row.equipment_id}
+                          id={row.id}
                           anchorEl={anchorEl != null && anchorEl.element}
-                          open={anchorEl != null && anchorEl.inputFormId === row.equipment_id}
+                          open={anchorEl != null && anchorEl.inputFormId === row.id}
                           onClose={handleElClose}
                           anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
                           transformOrigin={{ vertical: 'top', horizontal: 'right' }}
 
                         >
-                          {equipmentStatus
+                          {roomStatus
                             ?
-                            <MenuItem sx={{ color: 'text.secondary' }} onClick={() => { handleDisableEquipment(row.equipment_id) }}>
+                            <MenuItem sx={{ color: 'text.secondary' }} onClick={() => { handleDisableRoom(row.id) }}>
                               <ListItemIcon>
                                 <Icon icon={trash2Outline} width={24} height={24} />
                               </ListItemIcon>
                               <ListItemText primary="Disable" primaryTypographyProps={{ variant: 'body2' }} />
                             </MenuItem>
                             :
-                            <MenuItem sx={{ color: 'text.secondary' }} onClick={() => { handleActiveEquipment(row.equipment_id) }}>
+                            <MenuItem sx={{ color: 'text.secondary' }} onClick={() => { handleActiveRoom(row.id) }}>
                               <ListItemIcon>
                                 <Icon icon={trash2Outline} width={24} height={24} />
                               </ListItemIcon>
                               <ListItemText primary="Active" primaryTypographyProps={{ variant: 'body2' }} />
                             </MenuItem>
                           }
-                          <MenuItem sx={{ color: 'text.secondary' }} onClick={() => { handleEditClick(row.equipment_id) }}>
+                          <MenuItem sx={{ color: 'text.secondary' }} onClick={() => { handleEditClick(row.id) }}>
                             <ListItemIcon>
                               <Icon icon={editFill} width={24} height={24} />
                             </ListItemIcon>
                             <ListItemText primary="Edit" primaryTypographyProps={{ variant: 'body2' }} />
                           </MenuItem>
-                          <MenuItem sx={{ color: 'text.secondary' }} onClick={() => { handleDeleteEquipment(row.equipment_id) }}>
+                          <MenuItem sx={{ color: 'text.secondary' }} onClick={() => { handleDeleteRoom(row.id) }}>
                             <ListItemIcon>
                               <Icon icon={trash2Outline} width={24} height={24} />
                             </ListItemIcon>
@@ -424,7 +389,7 @@ export default function Equipment() {
             <TablePagination
               rowsPerPageOptions={[5, 10, 25]}
               component="div"
-              count={equipmentList.length}
+              count={roomList.length}
               rowsPerPage={rowsPerPage}
               page={page}
               onPageChange={handleChangePage}
@@ -447,55 +412,35 @@ export default function Equipment() {
               }}
             >
               <Typography component="h1" variant="h5">
-                Create Equipment
+                Create Room
               </Typography>
               <form onSubmit={formik.handleSubmit} noValidate sx={{ mt: 1 }}>
                 <TextField
                   margin="normal"
                   required
                   fullWidth
-                  id="equipment_name"
-                  label="Equipment Name"
-                  name="equipment_name"
-                  autoComplete="equipment_name"
-                  value={formik.values.equipment_name}
+                  id="room_name"
+                  label="Room Name"
+                  name="room_name"
+                  autoComplete="room_name"
+                  value={formik.values.room_name}
                   onChange={formik.handleChange}
-                  error={formik.touched.equipment_name && Boolean(formik.errors.equipment_name)}
-                  helperText={formik.touched.equipment_name && formik.errors.equipment_name}
+                  error={formik.touched.room_name && Boolean(formik.errors.room_name)}
+                  helperText={formik.touched.room_name && formik.errors.room_name}
                   autoFocus
                 />
                 <TextField
                   margin="normal"
                   fullWidth
-                  name="equipment_code"
-                  label="Equipment Code"
-                  type="equipment_code"
-                  id="equipment_code"
-                  autoComplete="current-equipment_code"
-                  value={formik.values.equipment_code}
+                  name="location"
+                  label="Location"
+                  type="location"
+                  id="location"
+                  autoComplete="current-location"
+                  value={formik.values.location}
                   onChange={formik.handleChange}
-                  error={formik.touched.equipment_code && Boolean(formik.errors.equipment_code)}
-                  helperText={formik.touched.equipment_code && formik.errors.equipment_code}
-                />
-                <Autocomplete
-                  id="room_id"
-                  name="room_id"
-                  required
-                  options={roomList}
-                  getOptionLabel={(option) => option.room_name}
-                  onChange={(e, value) => {
-                    formik.setFieldValue('room_id', value.id);
-                  }}
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      fullWidth
-                      label="Room"
-                      margin="normal"
-                      error={formik.touched.room_id && Boolean(formik.errors.room_id)}
-                      helperText={formik.touched.room_id && formik.errors.room_id}
-                    />
-                  )}
+                  error={formik.touched.location && Boolean(formik.errors.location)}
+                  helperText={formik.touched.location && formik.errors.location}
                 />
                 <Button
                   type="submit"
@@ -533,49 +478,27 @@ export default function Equipment() {
                 margin="normal"
                 required
                 fullWidth
-                id="equipment_name"
-                label="Equipment Name"
-                name="equipment_name"
-                autoComplete="equipment_name"
-                value={editUserFormik.values.equipment_name}
+                id="room_name"
+                label="Room Name"
+                name="room_name"
+                autoComplete="room_name"
+                value={editUserFormik.values.room_name}
                 onChange={editUserFormik.handleChange}
-                error={editUserFormik.touched.equipment_name && Boolean(editUserFormik.errors.equipment_name)}
-                helperText={editUserFormik.touched.equipment_name && editUserFormik.errors.equipment_name}
+                error={editUserFormik.touched.room_name && Boolean(editUserFormik.errors.room_name)}
+                helperText={editUserFormik.touched.room_name && editUserFormik.errors.room_name}
               />
               <TextField
                 margin="normal"
                 fullWidth
-                name="equipment_code"
-                label="Equipment Code"
-                type="equipment_code"
-                id="equipment_code"
-                autoComplete="current-equipment_code"
-                value={editUserFormik.values.equipment_code}
+                name="location"
+                label="Location"
+                type="location"
+                id="location"
+                autoComplete="current-location"
+                value={editUserFormik.values.location}
                 onChange={editUserFormik.handleChange}
-                error={editUserFormik.touched.equipment_code && Boolean(editUserFormik.errors.equipment_code)}
-                helperText={editUserFormik.touched.equipment_code && editUserFormik.errors.equipment_code}
-              />
-              <Autocomplete
-                id="room"
-                name="room"
-                required
-                value={editUserFormik.values.room}
-                isOptionEqualToValue={(option, value) => option.id === value.id}
-                options={roomList}
-                getOptionLabel={(option) => option.room_name}
-                onChange={(e, value) => {
-                  editUserFormik.setFieldValue('room', value);
-                }}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    fullWidth
-                    label="Room"
-                    margin="normal"
-                    error={editUserFormik.touched.room && Boolean(editUserFormik.errors.room)}
-                    helperText={editUserFormik.touched.room && editUserFormik.errors.room}
-                  />
-                )}
+                error={editUserFormik.touched.location && Boolean(editUserFormik.errors.location)}
+                helperText={editUserFormik.touched.location && editUserFormik.errors.location}
               />
               <Button
                 type="submit"
