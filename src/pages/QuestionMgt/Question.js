@@ -14,7 +14,7 @@ import { useEffect, useState } from 'react';
 // router
 import Page from 'src/components/Page';
 // api
-import { getRooms, checkRoom, activeRoom, disableRoom, createRoom, updateRoom, deleteRoom } from 'src/services/room.context';
+import { getQuestions, checkQuestion, activeQuestion, disableQuestion, createQuestion, updateQuestion, deleteQuestion } from 'src/services/question.context';
 import Label from 'src/components/Label';
 import EnhancedTableHead from 'src/components/EnchancedTableHead';
 import { filter } from 'lodash';
@@ -24,30 +24,28 @@ import SearchNotFound from 'src/components/SearchNotFound';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
 
-export default function Room() {
+export default function Question() {
 
-  const [roomList, setRoomList] = useState([]);
+  const [questionList, setQuestionList] = useState([]);
 
-  const loadRoomList = async () => {
-    await getRooms()
+  const loadQuestionList = async () => {
+    await getQuestions()
       .then((response) => {
-        // console.log(response.data);
-        setRoomList(response.data);
+        setQuestionList(response.data);
       });
   }
 
   useEffect(() => {
-    loadRoomList();
+    loadQuestionList();
   }, []);
 
 
   // table header
   const [order, setOrder] = useState('asc');
-  const [orderBy, setOrderBy] = useState('room_name');
+  const [orderBy, setOrderBy] = useState('question_text');
 
   const TABLE_HEAD = [
-    { id: 'room_name', label: 'Room Name', alignRight: false },
-    { id: 'location', label: 'Location', alignRight: false },
+    { id: 'question_text', label: 'Question', alignRight: false },
     { id: 'is_active', label: 'Status', alignRight: false },
     { id: '' }
   ];
@@ -76,7 +74,7 @@ export default function Room() {
       return a[1] - b[1];
     });
     if (query) {
-      return filter(array, (user) => user.room_name.toLowerCase().indexOf(query.toLowerCase()) !== -1);
+      return filter(array, (question) => question.question_text.toLowerCase().indexOf(query.toLowerCase()) !== -1);
     }
     return stabilizedThis.map((el) => el[0]);
   }
@@ -94,7 +92,7 @@ export default function Room() {
   const handleFilterByName = (event) => {
     setFilterName(event.target.value);
   };
-  const filteredUsers = applySortFilter(roomList, getComparator(order, orderBy), filterName);
+  const filteredUsers = applySortFilter(questionList, getComparator(order, orderBy), filterName);
   const isUserNotFound = filteredUsers.length === 0;
 
   // TablePagination
@@ -107,7 +105,7 @@ export default function Room() {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
   };
-  const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - roomList.length) : 0;
+  const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - questionList.length) : 0;
   // more menu
   const [anchorEl, setAnchorEl] = useState(null);
   const handleElClick = (inputFormId, event) => {
@@ -116,35 +114,35 @@ export default function Room() {
       element: event.currentTarget
     };
     setAnchorEl(obj);
-    checkCheckStatus(inputFormId)
+    checkStatus(inputFormId)
   };
   const handleElClose = () => {
     setAnchorEl(null);
   };
 
-  // check room is active
-  const [roomStatus, setRoomStatus] = useState();
-  const checkCheckStatus = (id) => {
-    checkRoom(id)
+  // check question is active
+  const [questionStatus, setQuestionStatus] = useState();
+  const checkStatus = (id) => {
+    checkQuestion(id)
       .then((response) => {
-        setRoomStatus(response.data.is_active)
+        setQuestionStatus(response.data.is_active)
       })
   }
-  // active room
-  const handleActiveRoom = async (id) => {
-    await activeRoom(id)
-    await loadRoomList()
+  // active question
+  const handleActiveQuestion = async (id) => {
+    await activeQuestion(id)
+    await loadQuestionList()
     handleElClose();
   }
 
-  // disable room
-  const handleDisableRoom = async (id) => {
-    await disableRoom(id)
-    await loadRoomList()
+  // disable question
+  const handleDisableQuestion = async (id) => {
+    await disableQuestion(id)
+    await loadQuestionList()
     handleElClose();
   };
 
-  // add room
+  // add question
   const [addOpen, setAddOpen] = useState(false);
   const handleAddClick = () => {
     setAddOpen(true);
@@ -153,37 +151,32 @@ export default function Room() {
     setAddOpen(false);
   };
 
-  // add room form 
+  // add question form 
   const validationSchema = yup.object({
-    room_name: yup
-      .string('Enter Room Name')
-      .required('Room Name is required'),
-    location: yup
-      .string('Enter Location')
+    question_text: yup
+      .string('Enter Question')
+      .required('Question Name is required'),
   });
 
   const formik = useFormik({
     initialValues: {
-      room_name: '',
-      location: '',
+      question_text: '',
     },
     validationSchema: validationSchema,
     onSubmit: async (values, { resetForm, setSubmitting, setErrors }) => {
       setSubmitting(false);
       let resetControl = true;
-      for (let x in roomList) {
-        console.log(roomList[x].room_name)
-        let roomNameList = roomList[x].room_name
-        if (values.room_name === roomNameList) {
-          setErrors({ room_name: 'Room Name in used' });
+      for (let x in questionList) {
+        let questionTextList = questionList[x].question_text
+        if (values.question_text === questionTextList) {
+          setErrors({ question_text: 'Question in used' });
           resetControl = false;
         }
       }
       if (resetControl) {
-        const room_name = values.room_name;
-        const location = values.location;
-        await createRoom(room_name, location);
-        await loadRoomList();
+        const question_text = values.question_text;
+        await createQuestion(question_text);
+        await loadQuestionList();
         resetForm();
         handleAddClose();
       }
@@ -191,21 +184,18 @@ export default function Room() {
   });
 
   // edit room
-  const [editRoom, setEditRoom] = useState({
+  const [editQuestion, setEditQuestion] = useState({
     id: '',
-    room_name: '',
-    location: ''
+    question_text: '',
   });
   const [editOpen, setEditOpen] = useState(false);
   const handleEditClick = (id) => {
-    for (let x in roomList) {
-      if (id === roomList[x].id) {
-        let room_name = roomList[x].room_name;
-        let location = roomList[x].location;
-        setEditRoom({
+    for (let x in questionList) {
+      if (id === questionList[x].id) {
+        let question_text = questionList[x].question_text;
+        setEditQuestion({
           id: id,
-          room_name: room_name,
-          location: location
+          question_text: question_text,
         });
       }
     }
@@ -216,61 +206,57 @@ export default function Room() {
     setEditOpen(false);
   };
   const editValidationSchema = yup.object({
-    room_name: yup
-      .string('Enter Room Name')
-      .required('Room name is required'),
-    location: yup
-      .string('Enter Location')
+    question_text: yup
+      .string('Enter Question')
+      .required('Question is required'),
   });
 
   // edit room form
   const editUserFormik = useFormik({
     enableReinitialize: true,
     initialValues: {
-      room_name: editRoom.room_name,
-      location: editRoom.location,
+      question_text: editQuestion.question_text,
     },
     validationSchema: editValidationSchema,
     onSubmit: async (values, { resetForm, setSubmitting, setErrors }) => {
       setSubmitting(false);
       let resetControl = true;
-      for (let x in roomList) {
-        let roomNameList = roomList[x].room_name
-        if (values.room_name === roomNameList) {
-          if (values.room_name !== roomNameList) {
-            setErrors({ room_name: 'Room Name in used' });
+      for (let x in questionList) {
+        let questionTextList = questionList[x].question_text
+        if (values.question_text === questionTextList) {
+          if (values.question_text !== questionTextList) {
+            setErrors({ question_text: 'Question in used' });
             resetControl = false;
           }
         }
       }
       if (resetControl) {
-        const id = editRoom.id;
-        const room_name = values.room_name;
-        const location = values.location;
-        await updateRoom(id, room_name, location);
-        await loadRoomList();
+        const id = editQuestion.id;
+        const question_text = values.question_text;
+        await updateQuestion(id, question_text);
+        await loadQuestionList();
         resetForm();
         handleEditClose();
       }
     },
   });
-  const handleDeleteRoom = async (id) => {
-    await deleteRoom(id);
-    await loadRoomList();
+  const handleDeleteQuestion = async (id) => {
+    await deleteQuestion(id);
+    await loadQuestionList();
   }
   return (
-    <Page title="Room">
+    <Page title="Question">
       <Container>
         <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5}>
           <Typography variant="h4" gutterBottom>
-            Room
+            Question
           </Typography>
           <Button
             variant="contained"
             onClick={handleAddClick}
             startIcon={<Icon icon={plusFill} />}
           >
-            New Room
+            New Question
           </Button>
         </Stack>
         {/* main */}
@@ -288,7 +274,7 @@ export default function Room() {
                 order={order}
                 orderBy={orderBy}
                 headLabel={TABLE_HEAD}
-                rowCount={roomList.length}
+                rowCount={questionList.length}
                 onRequestSort={handleRequestSort}
               />
               {/* table body */}
@@ -303,11 +289,10 @@ export default function Room() {
                       <TableCell component="th" scope="row" padding="normal" >
                         <Stack direction="row" alignItems="center" spacing={5}>
                           <Typography variant="subtitle2" noWrap >
-                            {row.room_name}
+                            {row.question_text}
                           </Typography>
                         </Stack>
                       </TableCell>
-                      <TableCell align="left">{row.location}</TableCell>
                       <TableCell align="left">
                         <Label
                           variant="ghost"
@@ -336,16 +321,16 @@ export default function Room() {
                           transformOrigin={{ vertical: 'top', horizontal: 'right' }}
 
                         >
-                          {roomStatus
+                          {questionStatus
                             ?
-                            <MenuItem sx={{ color: 'text.secondary' }} onClick={() => { handleDisableRoom(row.id) }}>
+                            <MenuItem sx={{ color: 'text.secondary' }} onClick={() => { handleDisableQuestion(row.id) }}>
                               <ListItemIcon>
                                 <Icon icon={trash2Outline} width={24} height={24} />
                               </ListItemIcon>
                               <ListItemText primary="Disable" primaryTypographyProps={{ variant: 'body2' }} />
                             </MenuItem>
                             :
-                            <MenuItem sx={{ color: 'text.secondary' }} onClick={() => { handleActiveRoom(row.id) }}>
+                            <MenuItem sx={{ color: 'text.secondary' }} onClick={() => { handleActiveQuestion(row.id) }}>
                               <ListItemIcon>
                                 <Icon icon={trash2Outline} width={24} height={24} />
                               </ListItemIcon>
@@ -358,7 +343,7 @@ export default function Room() {
                             </ListItemIcon>
                             <ListItemText primary="Edit" primaryTypographyProps={{ variant: 'body2' }} />
                           </MenuItem>
-                          <MenuItem sx={{ color: 'text.secondary' }} onClick={() => { handleDeleteRoom(row.id) }}>
+                          <MenuItem sx={{ color: 'text.secondary' }} onClick={() => { handleDeleteQuestion(row.id) }}>
                             <ListItemIcon>
                               <Icon icon={trash2Outline} width={24} height={24} />
                             </ListItemIcon>
@@ -389,7 +374,7 @@ export default function Room() {
             <TablePagination
               rowsPerPageOptions={[5, 10, 25]}
               component="div"
-              count={roomList.length}
+              count={questionList.length}
               rowsPerPage={rowsPerPage}
               page={page}
               onPageChange={handleChangePage}
@@ -412,35 +397,22 @@ export default function Room() {
               }}
             >
               <Typography component="h1" variant="h5">
-                Create Room
+                Create Question
               </Typography>
               <form onSubmit={formik.handleSubmit} noValidate sx={{ mt: 1 }}>
                 <TextField
                   margin="normal"
                   required
                   fullWidth
-                  id="room_name"
-                  label="Room Name"
-                  name="room_name"
-                  autoComplete="room_name"
-                  value={formik.values.room_name}
+                  id="question_text"
+                  label="Question Name"
+                  name="question_text"
+                  autoComplete="question_text"
+                  value={formik.values.question_text}
                   onChange={formik.handleChange}
-                  error={formik.touched.room_name && Boolean(formik.errors.room_name)}
-                  helperText={formik.touched.room_name && formik.errors.room_name}
+                  error={formik.touched.question_text && Boolean(formik.errors.question_text)}
+                  helperText={formik.touched.question_text && formik.errors.question_text}
                   autoFocus
-                />
-                <TextField
-                  margin="normal"
-                  fullWidth
-                  name="location"
-                  label="Location"
-                  type="location"
-                  id="location"
-                  autoComplete="current-location"
-                  value={formik.values.location}
-                  onChange={formik.handleChange}
-                  error={formik.touched.location && Boolean(formik.errors.location)}
-                  helperText={formik.touched.location && formik.errors.location}
                 />
                 <Button
                   type="submit"
@@ -478,27 +450,14 @@ export default function Room() {
                 margin="normal"
                 required
                 fullWidth
-                id="room_name"
-                label="Room Name"
-                name="room_name"
-                autoComplete="room_name"
-                value={editUserFormik.values.room_name}
+                id="question_text"
+                label="Question Name"
+                name="question_text"
+                autoComplete="question_text"
+                value={editUserFormik.values.question_text}
                 onChange={editUserFormik.handleChange}
-                error={editUserFormik.touched.room_name && Boolean(editUserFormik.errors.room_name)}
-                helperText={editUserFormik.touched.room_name && editUserFormik.errors.room_name}
-              />
-              <TextField
-                margin="normal"
-                fullWidth
-                name="location"
-                label="Location"
-                type="location"
-                id="location"
-                autoComplete="current-location"
-                value={editUserFormik.values.location}
-                onChange={editUserFormik.handleChange}
-                error={editUserFormik.touched.location && Boolean(editUserFormik.errors.location)}
-                helperText={editUserFormik.touched.location && editUserFormik.errors.location}
+                error={editUserFormik.touched.question_text && Boolean(editUserFormik.errors.question_text)}
+                helperText={editUserFormik.touched.question_text && editUserFormik.errors.question_text}
               />
               <Button
                 type="submit"
