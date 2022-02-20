@@ -3,14 +3,15 @@ import { Navigate, useRoutes } from 'react-router-dom';
 import DashboardLayout from 'src/layouts/dashboard';
 import LogoOnlyLayout from 'src/layouts/LogoOnlyLayout';
 //
-import Login from 'src/pages/Login';
+import Login from 'src/pages/AuthMgt/Login';
 import Dashboard from 'src/pages/DashboardMgt/Dashboard';
-import Form from 'src/pages/Form';
-import User from 'src/pages/User';
+import Form from 'src/pages/FormMgt/Form';
+import User from 'src/pages/UserMgt/User';
 import Room from 'src/pages/RoomMgt/Room';
 import Equipment from 'src/pages/EquipmentMgt/Equipment';
 import Question from 'src/pages/QuestionMgt/Question';
-import NotFound from 'src/pages/Page404';
+import Record from 'src/pages/RecordMgt/Record';
+import NotFound from 'src/pages/AuthMgt/Page404';
 //
 import { useContext } from "react";
 import AuthContext from "src/services/auth.context";
@@ -28,7 +29,8 @@ export default function Router() {
         { path: 'form', element: <Form /> },
         { path: 'room', element: <Room /> },
         { path: 'equipment', element: <Equipment /> },
-        { path: 'question', element: <Question /> }
+        { path: 'question', element: <Question /> },
+        { path: 'record', element: <Record /> }
       ]
     },
     {

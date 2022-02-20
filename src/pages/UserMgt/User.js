@@ -12,14 +12,14 @@ import {
 // react
 import { useEffect, useState } from 'react';
 // router
-import Page from '../components/Page';
+import Page from 'src/components/Page';
 // api
-import { getUsers, activeUser, disableUser, checkUser, createUser, updateUser,deleteUser} from '../services/user.context';
-import Label from '../components/Label';
-import EnhancedTableHead from '../components/EnchancedTableHead';
+import { getUsers, activeUser, disableUser, checkUser, createUser, updateUser,deleteUser} from 'src/services/user.context';
+import Label from 'src/components/Label';
+import EnhancedTableHead from 'src/components/EnchancedTableHead';
 import { filter } from 'lodash';
-import EnchancedToolbar from '../components/EnchancedToolbar';
-import SearchNotFound from '../components/SearchNotFound';
+import EnchancedToolbar from 'src/components/EnchancedToolbar';
+import SearchNotFound from 'src/components/SearchNotFound';
 // form
 import { useFormik } from 'formik';
 import * as yup from 'yup';

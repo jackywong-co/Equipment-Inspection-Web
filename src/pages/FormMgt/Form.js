@@ -11,14 +11,14 @@ import {
 import { useEffect, useState } from 'react';
 // router
 import { Link as RouterLink } from 'react-router-dom';
-import Page from '../components/Page';
+import Page from '../../components/Page';
 // api
-import { getForms } from '../services/form.context';
-import Label from '../components/Label';
-import EnhancedTableHead from '../components/EnchancedTableHead';
+import { getForms } from '../../services/form.context';
+import Label from '../../components/Label';
+import EnhancedTableHead from '../../components/EnchancedTableHead';
 import { filter } from 'lodash';
-import EnchancedToolbar from '../components/EnchancedToolbar';
-import SearchNotFound from '../components/SearchNotFound';
+import EnchancedToolbar from '../../components/EnchancedToolbar';
+import SearchNotFound from '../../components/SearchNotFound';
 export default function Form() {
 
   // api

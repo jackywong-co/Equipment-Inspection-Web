@@ -1,7 +1,7 @@
 // material
 import { styled } from '@mui/material/styles';
 import Box from '@mui/material/Box';
-import Page from '../components/Page';
+import Page from '../../components/Page';
 
 const RootStyle = styled(Page)(({ theme }) => ({
   display: 'flex',
