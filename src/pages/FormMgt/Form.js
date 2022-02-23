@@ -3,44 +3,73 @@ import { Icon } from '@iconify/react';
 import moreVerticalFill from '@iconify/icons-eva/more-vertical-fill';
 import trash2Outline from '@iconify/icons-eva/trash-2-outline';
 import plusFill from '@iconify/icons-eva/plus-fill';
+import editFill from '@iconify/icons-eva/edit-fill';
 // mui
 import {
-  Button, Card, Container, Stack, Table, TableBody, TableCell, TableContainer, TablePagination, TableRow, Typography, IconButton, Menu, MenuItem, ListItemIcon, ListItemText
+  Button, Card, Container, Stack, Table, TableBody, TableCell, TableContainer, TablePagination, TableRow, Typography, IconButton, Menu, MenuItem, ListItemIcon, ListItemText,
+  Dialog, TextField, Box, CssBaseline, Autocomplete
 } from '@mui/material';
 // react
 import { useEffect, useState } from 'react';
 // router
-import { Link as RouterLink } from 'react-router-dom';
-import Page from '../../components/Page';
+import Page from 'src/components/Page';
 // api
-import { getForms } from '../../services/form.context';
-import Label from '../../components/Label';
-import EnhancedTableHead from '../../components/EnchancedTableHead';
+import { getRooms, checkRoom, activeRoom, disableRoom, createRoom, updateRoom, deleteRoom } from 'src/services/room.context';
+import { getUsers } from 'src/services/user.context';
+import { getEquipments, checkEquipment, activeEquipment, disableEquipment, createEquipment, updateEquipment, deleteEquipment } from 'src/services/equipment.context';
+import { getForms, checkForm, activeForm, disableForm, createForm, updateForm, deleteForm } from '../../services/form.context';
+import Label from 'src/components/Label';
+import EnhancedTableHead from 'src/components/EnchancedTableHead';
 import { filter } from 'lodash';
-import EnchancedToolbar from '../../components/EnchancedToolbar';
-import SearchNotFound from '../../components/SearchNotFound';
-export default function Form() {
+import EnchancedToolbar from 'src/components/EnchancedToolbar';
+import SearchNotFound from 'src/components/SearchNotFound';
+// form
+import { useFormik } from 'formik';
+import * as yup from 'yup';
 
-  // api
+
+export default function Form() {
+  const [userList, setUserList] = useState([]);
+
+  const loadUserList = async () => {
+    await getUsers()
+      .then((response) => {
+        setUserList(response.data);
+      });
+  }
+
+  const [equipmentList, setEquipmentList] = useState([]);
+
+  const loadEquipmentList = async () => {
+    await getEquipments()
+      .then((response) => {
+        setEquipmentList(response.data);
+      });
+  }
+
   const [formItems, setFormItems] = useState([]);
-  useEffect(() => {
-    getForms()
+
+  const loadFormList = async () => {
+    await getForms()
       .then((response) => {
         // console.log(response.data);
         setFormItems(response.data);
       });
+  }
+
+
+  useEffect(() => {
+    loadFormList();
   }, []);
 
 
   // table header
   const [order, setOrder] = useState('asc');
-  const [selected, setSelected] = useState([]);
-  const [orderBy, setOrderBy] = useState('username');
-
+  const [orderBy, setOrderBy] = useState('form_name');
 
   const TABLE_HEAD = [
     { id: 'form_name', label: 'Form Name', alignRight: false },
-    { id: 'created_by', label: 'Created By', alignRight: false },
+    { id: 'created_by', label: 'Created by', alignRight: false },
     { id: 'equipment', label: 'Equipment', alignRight: false },
     { id: 'is_active', label: 'Status', alignRight: false },
     { id: '' }
@@ -70,7 +99,7 @@ export default function Form() {
       return a[1] - b[1];
     });
     if (query) {
-      return filter(array, (form) => form.form_name.toLowerCase().indexOf(query.toLowerCase()) !== -1);
+      return filter(array, (user) => user.form_name.toLowerCase().indexOf(query.toLowerCase()) !== -1);
     }
     return stabilizedThis.map((el) => el[0]);
   }
@@ -81,15 +110,13 @@ export default function Form() {
     setOrderBy(property);
   };
 
-
-
   // toolbar
   const [filterName, setFilterName] = useState('');
   const handleFilterByName = (event) => {
     setFilterName(event.target.value);
   };
-  const filteredForms = applySortFilter(formItems, getComparator(order, orderBy), filterName);
-  const isUserNotFound = filteredForms.length === 0;
+  const filteredUsers = applySortFilter(formItems, getComparator(order, orderBy), filterName);
+  const isUserNotFound = filteredUsers.length === 0;
 
   // TablePagination
   const [page, setPage] = useState(0);
@@ -109,12 +136,158 @@ export default function Form() {
       inputFormId,
       element: event.currentTarget
     };
+    
+    loadEquipmentList();
     setAnchorEl(obj);
-  }
+    checkCheckStatus(inputFormId)
+  };
   const handleElClose = () => {
     setAnchorEl(null);
+  };
+
+  // check form is active
+  const [formStatus, setFormStatus] = useState();
+  const checkCheckStatus = (id) => {
+    checkForm(id)
+      .then((response) => {
+        console.log(response.data.is_active)
+        setFormStatus(response.data.is_active)
+      })
+  }
+  // active form
+  const handleActiveForm = async (id) => {
+    await activeForm(id)
+    await loadFormList()
+    handleElClose();
   }
 
+  // disable form
+  const handleDisableForm = async (id) => {
+    await disableForm(id)
+    await loadFormList()
+    handleElClose();
+  };
+
+  // add form
+  const [addOpen, setAddOpen] = useState(false);
+  const handleAddClick = () => {
+    loadEquipmentList();
+    loadUserList();
+    setAddOpen(true);
+  };
+  const handleAddClose = () => {
+    setAddOpen(false);
+  };
+
+
+
+  // add form form 
+  const validationSchema = yup.object({
+    form_name: yup
+      .string('Enter Room Name')
+      .required('Room Name is required'),
+    created_by: yup
+      .string('Enter User'),
+    equipment_id: yup
+      .string('Enter Equipment'),
+  });
+
+  const formik = useFormik({
+    initialValues: {
+      form_name: '',
+      created_by: '',
+    },
+    validationSchema: validationSchema,
+    onSubmit: async (values, { resetForm, setSubmitting, setErrors }) => {
+      setSubmitting(false);
+      let resetControl = true;
+      for (let x in formItems) {
+        console.log(formItems[x].form_name)
+        let roomNameList = formItems[x].form_name
+        if (values.form_name === roomNameList) {
+          setErrors({ form_name: 'Room Name in used' });
+          resetControl = false;
+        }
+      }
+      if (resetControl) {
+        const form_name = values.form_name;
+        const created_by = values.created_by;
+        await createRoom(form_name, created_by);
+        await loadFormList();
+        resetForm();
+        handleAddClose();
+      }
+    },
+  });
+
+  // edit form
+  const [editRoom, setEditRoom] = useState({
+    id: '',
+    form_name: '',
+    created_by: ''
+  });
+  const [editOpen, setEditOpen] = useState(false);
+  const handleEditClick = (id) => {
+    for (let x in formItems) {
+      if (id === formItems[x].id) {
+        let form_name = formItems[x].form_name;
+        let created_by = formItems[x].created_by;
+        setEditRoom({
+          id: id,
+          form_name: form_name,
+          created_by: created_by
+        });
+      }
+    }
+    setEditOpen(true);
+    handleElClose();
+  }
+  const handleEditClose = () => {
+    setEditOpen(false);
+  };
+  const editValidationSchema = yup.object({
+    form_name: yup
+      .string('Enter Room Name')
+      .required('Room name is required'),
+    created_by: yup
+      .string('Enter Location')
+  });
+
+  // edit form form
+  const editUserFormik = useFormik({
+    enableReinitialize: true,
+    initialValues: {
+      form_name: editRoom.form_name,
+      created_by: editRoom.created_by,
+    },
+    validationSchema: editValidationSchema,
+    onSubmit: async (values, { resetForm, setSubmitting, setErrors }) => {
+      setSubmitting(false);
+      let resetControl = true;
+      for (let x in formItems) {
+        let roomNameList = formItems[x].form_name
+        if (values.form_name === roomNameList) {
+          if (values.form_name !== roomNameList) {
+            setErrors({ form_name: 'Room Name in used' });
+            resetControl = false;
+          }
+        }
+      }
+      if (resetControl) {
+        const id = editRoom.id;
+        const form_name = values.form_name;
+        const created_by = values.created_by;
+        await updateRoom(id, form_name, created_by);
+        await loadFormList();
+        resetForm();
+        handleEditClose();
+      }
+    },
+  });
+  const handleDeleteRoom = async (id) => {
+    await deleteRoom(id);
+    await loadFormList();
+  }
   return (
     <Page title="Form">
       <Container>
@@ -124,8 +297,7 @@ export default function Form() {
           </Typography>
           <Button
             variant="contained"
-            component={RouterLink}
-            to="#"
+            onClick={handleAddClick}
             startIcon={<Icon icon={plusFill} />}
           >
             New Form
@@ -135,7 +307,6 @@ export default function Form() {
         <Card>
           {/* Toolbar */}
           <EnchancedToolbar
-            numSelected={selected.length}
             filterName={filterName}
             onFilterName={handleFilterByName}
           />
@@ -148,26 +319,25 @@ export default function Form() {
                 orderBy={orderBy}
                 headLabel={TABLE_HEAD}
                 rowCount={formItems.length}
-                numSelected={selected.length}
                 onRequestSort={handleRequestSort}
               />
               {/* table body */}
               <TableBody>
-                {filteredForms
+                {filteredUsers
                   .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                   .map((row) => (
                     <TableRow
-                      key={row.id}
+                      key={row.form_id}
                       sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
                     >
-                      <TableCell component="th" scope="row" padding="normal">
-                        <Stack direction="row" alignItems="center" spacing={2}>
-                          <Typography variant="subtitle2" noWrap>
+                      <TableCell component="th" scope="row" padding="normal" >
+                        <Stack direction="row" alignItems="center" spacing={5}>
+                          <Typography variant="subtitle2" noWrap >
                             {row.form_name}
                           </Typography>
                         </Stack>
                       </TableCell>
-                      <TableCell align="left">{row.created_by["username"]}</TableCell>
+                      <TableCell align="left">{row.created_by_name}</TableCell>
                       <TableCell align="left">{row.equipments[0]["equipment_name"]}</TableCell>
                       <TableCell align="left">
                         <Label
@@ -181,26 +351,49 @@ export default function Form() {
                         <IconButton
                           aria-label='more'
                           aria-controls="long-menu"
-                          aria-expanded={anchorEl != null && anchorEl.inputFormId === row.id ? 'true' : undefined}
+                          aria-expanded={anchorEl != null && anchorEl.inputFormId === row.form_id ? 'true' : undefined}
                           aria-haspopup="true"
-                          onClick={(e) => handleElClick(row.id, e)}
+                          onClick={(e) => handleElClick(row.form_id, e)}
                         >
                           <Icon icon={moreVerticalFill} width={20} height={20} />
                         </IconButton>
                         {/* more menu */}
                         <Menu
-                          id={row.id}
+                          form_id={row.form_id}
                           anchorEl={anchorEl != null && anchorEl.element}
-                          open={anchorEl != null && anchorEl.inputFormId === row.id}
+                          open={anchorEl != null && anchorEl.inputFormId === row.form_id}
                           onClose={handleElClose}
                           anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
                           transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+
                         >
-                          <MenuItem sx={{ color: 'text.secondary' }} onClick={() => { console.log(row.id) }}>
+                          {formStatus
+                            ?
+                            <MenuItem sx={{ color: 'text.secondary' }} onClick={() => { handleDisableForm(row.form_id) }}>
+                              <ListItemIcon>
+                                <Icon icon={trash2Outline} width={24} height={24} />
+                              </ListItemIcon>
+                              <ListItemText primary="Disable" primaryTypographyProps={{ variant: 'body2' }} />
+                            </MenuItem>
+                            :
+                            <MenuItem sx={{ color: 'text.secondary' }} onClick={() => { handleActiveForm(row.form_id) }}>
+                              <ListItemIcon>
+                                <Icon icon={trash2Outline} width={24} height={24} />
+                              </ListItemIcon>
+                              <ListItemText primary="Active" primaryTypographyProps={{ variant: 'body2' }} />
+                            </MenuItem>
+                          }
+                          <MenuItem sx={{ color: 'text.secondary' }} onClick={() => { handleEditClick(row.form_id) }}>
+                            <ListItemIcon>
+                              <Icon icon={editFill} width={24} height={24} />
+                            </ListItemIcon>
+                            <ListItemText primary="Edit" primaryTypographyProps={{ variant: 'body2' }} />
+                          </MenuItem>
+                          <MenuItem sx={{ color: 'text.secondary' }} onClick={() => { handleDeleteRoom(row.form_id) }}>
                             <ListItemIcon>
                               <Icon icon={trash2Outline} width={24} height={24} />
                             </ListItemIcon>
-                            <ListItemText primary="Disable" primaryTypographyProps={{ variant: 'body2' }} />
+                            <ListItemText primary="Delete" primaryTypographyProps={{ variant: 'body2' }} />
                           </MenuItem>
                         </Menu>
                       </TableCell>
@@ -235,7 +428,143 @@ export default function Form() {
             />
           </TableContainer>
         </Card>
+        {/* add dialoag form */}
+        <Dialog open={addOpen} onClose={handleAddClose}>
+
+          {/* add form form */}
+          <Container component="main" maxWidth="xs">
+            <CssBaseline />
+            <Box
+              sx={{
+                marginTop: 8,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+              }}
+            >
+              <Typography component="h1" variant="h5">
+                Create Form
+              </Typography>
+              <form onSubmit={formik.handleSubmit} noValidate sx={{ mt: 1 }}>
+                <TextField
+                  margin="normal"
+                  required
+                  fullWidth
+                  id="form_name"
+                  label="Form Name"
+                  name="form_name"
+                  autoComplete="form_name"
+                  value={formik.values.form_name}
+                  onChange={formik.handleChange}
+                  error={formik.touched.form_name && Boolean(formik.errors.form_name)}
+                  helperText={formik.touched.form_name && formik.errors.form_name}
+                  autoFocus
+                />
+                <TextField
+                  margin="normal"
+                  fullWidth
+                  required
+                  name="created_by"
+                  label="Created by"
+                  type="created_by"
+                  id="created_by"
+                  autoComplete="current-created_by"
+                  value={formik.values.created_by}
+                  onChange={formik.handleChange}
+                  error={formik.touched.created_by && Boolean(formik.errors.created_by)}
+                  helperText={formik.touched.created_by && formik.errors.created_by}
+                />
+                <Autocomplete
+                  id="equipment_id"
+                  name="equipment_id"
+                  options={equipmentList}
+                  getOptionLabel={(option) => option.equipment_name}
+                  onChange={(e, value) => {
+                    formik.setFieldValue('equipment_id', value.equipment_id);
+                  }}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      fullWidth
+                      required
+                      label="Equipment"
+                      margin="normal"
+                      error={formik.touched.equipment_id && Boolean(formik.errors.equipment_id)}
+                      helperText={formik.touched.equipment_id && formik.errors.equipment_id}
+                    />
+                  )}
+                />
+                <Button
+                  type="submit"
+                  fullWidth
+                  variant="contained"
+                  sx={{ mt: 3, mb: 2 }}
+                  disabled={formik.isSubmitting}
+                >
+                  Submit
+                </Button>
+              </form>
+            </Box>
+          </Container>
+        </Dialog>
       </Container>
+
+      <Dialog open={editOpen} onClose={handleEditClose}>
+
+        {/* edit user form */}
+        <Container component="main" maxWidth="xs">
+          <CssBaseline />
+          <Box
+            sx={{
+              marginTop: 8,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+            }}
+          >
+            <Typography component="h1" variant="h5">
+              Edit Form
+            </Typography>
+            <form onSubmit={editUserFormik.handleSubmit} noValidate sx={{ mt: 1 }}>
+              <TextField
+                margin="normal"
+                required
+                fullWidth
+                id="form_name"
+                label="Room Name"
+                name="form_name"
+                autoComplete="form_name"
+                value={editUserFormik.values.form_name}
+                onChange={editUserFormik.handleChange}
+                error={editUserFormik.touched.form_name && Boolean(editUserFormik.errors.form_name)}
+                helperText={editUserFormik.touched.form_name && editUserFormik.errors.form_name}
+              />
+              <TextField
+                margin="normal"
+                fullWidth
+                name="created_by"
+                label="Location"
+                type="created_by"
+                id="created_by"
+                autoComplete="current-created_by"
+                value={editUserFormik.values.created_by}
+                onChange={editUserFormik.handleChange}
+                error={editUserFormik.touched.created_by && Boolean(editUserFormik.errors.created_by)}
+                helperText={editUserFormik.touched.created_by && editUserFormik.errors.created_by}
+              />
+              <Button
+                type="submit"
+                fullWidth
+                variant="contained"
+                sx={{ mt: 3, mb: 2 }}
+                disabled={editUserFormik.isSubmitting}
+              >
+                Submit
+              </Button>
+            </form>
+          </Box>
+        </Container>
+      </Dialog>
     </Page>
   );
 }

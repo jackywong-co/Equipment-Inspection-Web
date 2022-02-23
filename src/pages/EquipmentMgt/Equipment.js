@@ -14,7 +14,7 @@ import { useEffect, useState } from 'react';
 // router
 import Page from 'src/components/Page';
 // api
-import { getRooms, checkRoom, activeRoom, disableRoom, createRoom, updateRoom } from 'src/services/room.context';
+import { getRooms } from 'src/services/room.context';
 import { getEquipments, checkEquipment, activeEquipment, disableEquipment, createEquipment, updateEquipment, deleteEquipment } from 'src/services/equipment.context';
 import Label from 'src/components/Label';
 import EnhancedTableHead from 'src/components/EnchancedTableHead';

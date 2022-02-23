@@ -1,6 +1,5 @@
 import axiosInstance from "./axios.instance";
 
-
 export const getRooms = () => {
   return (
     axiosInstance
