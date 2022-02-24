@@ -3,6 +3,8 @@ import { Icon } from '@iconify/react';
 import moreVerticalFill from '@iconify/icons-eva/more-vertical-fill';
 import trash2Outline from '@iconify/icons-eva/trash-2-outline';
 import plusFill from '@iconify/icons-eva/plus-fill';
+import eyeOffFIll from '@iconify/icons-eva/eye-off-fill';
+import eyeFIll from '@iconify/icons-eva/eye-fill';
 import editFill from '@iconify/icons-eva/edit-fill';
 // mui
 import {
@@ -26,7 +28,8 @@ import SearchNotFound from 'src/components/SearchNotFound';
 // form
 import { useFormik } from 'formik';
 import * as yup from 'yup';
-
+//
+import jwt_decode from "jwt-decode";
 
 export default function Form() {
   const [userList, setUserList] = useState([]);
@@ -52,7 +55,6 @@ export default function Form() {
   const loadFormList = async () => {
     await getForms()
       .then((response) => {
-        // console.log(response.data);
         setFormItems(response.data);
       });
   }
@@ -99,7 +101,7 @@ export default function Form() {
       return a[1] - b[1];
     });
     if (query) {
-      return filter(array, (user) => user.form_name.toLowerCase().indexOf(query.toLowerCase()) !== -1);
+      return filter(array, (form) => form.form_name.toLowerCase().indexOf(query.toLowerCase()) !== -1);
     }
     return stabilizedThis.map((el) => el[0]);
   }
@@ -136,7 +138,7 @@ export default function Form() {
       inputFormId,
       element: event.currentTarget
     };
-    
+    loadUserList();
     loadEquipmentList();
     setAnchorEl(obj);
     checkCheckStatus(inputFormId)
@@ -150,7 +152,6 @@ export default function Form() {
   const checkCheckStatus = (id) => {
     checkForm(id)
       .then((response) => {
-        console.log(response.data.is_active)
         setFormStatus(response.data.is_active)
       })
   }
@@ -168,51 +169,81 @@ export default function Form() {
     handleElClose();
   };
 
+  const [createFormInit, setCreateFormInit] = useState({
+    created_by: {},
+    question: [
+      {
+        "id": "56d24e82-fdb7-4f15-8baf-b721cbc8a854",
+        "question_text": "Normal ?",
+        "is_active": true
+      },
+      {
+        "id": "040079f3-9049-4c78-a32b-7b45a7e6ee55",
+        "question_text": "Defects ?",
+        "is_active": true
+      },
+      {
+        "id": "d5d60df8-22fa-496f-86b9-1c5e6c9e45dd",
+        "question_text": "Follow up actions ?",
+        "is_active": true
+      }
+    ],
+  });
   // add form
   const [addOpen, setAddOpen] = useState(false);
   const handleAddClick = () => {
-    loadEquipmentList();
     loadUserList();
+    loadEquipmentList();
+    let user_id = jwt_decode(localStorage.getItem('token')).user_id
+    let user
+    for (let x in userList) {
+      if (user_id === userList[x].id) {
+        user = userList[x];
+        console.log(user)
+      }
+    };
+    setCreateFormInit({
+      created_by: user,
+    })
     setAddOpen(true);
   };
   const handleAddClose = () => {
     setAddOpen(false);
   };
-
-
-
   // add form form 
   const validationSchema = yup.object({
     form_name: yup
       .string('Enter Room Name')
       .required('Room Name is required'),
-    created_by: yup
-      .string('Enter User'),
-    equipment_id: yup
-      .string('Enter Equipment'),
+
   });
 
   const formik = useFormik({
+    enableReinitialize: true,
     initialValues: {
       form_name: '',
-      created_by: '',
+      created_by: createFormInit.created_by,
+      equipment: [],
+      question: createFormInit.question,
     },
     validationSchema: validationSchema,
     onSubmit: async (values, { resetForm, setSubmitting, setErrors }) => {
       setSubmitting(false);
       let resetControl = true;
       for (let x in formItems) {
-        console.log(formItems[x].form_name)
-        let roomNameList = formItems[x].form_name
-        if (values.form_name === roomNameList) {
-          setErrors({ form_name: 'Room Name in used' });
+        let formNameList = formItems[x].form_name
+        if (values.form_name === formNameList) {
+          setErrors({ form_name: 'Form Name in used' });
           resetControl = false;
         }
       }
       if (resetControl) {
         const form_name = values.form_name;
         const created_by = values.created_by;
-        await createRoom(form_name, created_by);
+        let equipment = []
+        equipment.push(values.equipment);
+        const question = values.question;
+        await createForm(form_name, created_by, equipment, question);
         await loadFormList();
         resetForm();
         handleAddClose();
@@ -221,24 +252,37 @@ export default function Form() {
   });
 
   // edit form
-  const [editRoom, setEditRoom] = useState({
+  const [editFormInit, setEditFormInit] = useState({
     id: '',
     form_name: '',
-    created_by: ''
+    created_by: {},
+    equipment: {},
   });
   const [editOpen, setEditOpen] = useState(false);
   const handleEditClick = (id) => {
+    let form_name
+    let created_by
+    let equipment
     for (let x in formItems) {
-      if (id === formItems[x].id) {
-        let form_name = formItems[x].form_name;
-        let created_by = formItems[x].created_by;
-        setEditRoom({
-          id: id,
-          form_name: form_name,
-          created_by: created_by
-        });
+      if (id === formItems[x].form_id) {
+        form_name = formItems[x].form_name;
+        created_by = formItems[x].created_by;
+        equipment = formItems[x].equipments[0];
       }
     }
+    console.log(formItems)
+    console.log({
+      id: id,
+      form_name: form_name,
+      created_by: created_by,
+      equipment: equipment,
+    })
+    setEditFormInit({
+      id: id,
+      form_name: form_name,
+      created_by: created_by,
+      equipment: equipment,
+    });
     setEditOpen(true);
     handleElClose();
   }
@@ -247,18 +291,17 @@ export default function Form() {
   };
   const editValidationSchema = yup.object({
     form_name: yup
-      .string('Enter Room Name')
-      .required('Room name is required'),
-    created_by: yup
-      .string('Enter Location')
+      .string('Enter Form Name')
+      .required('Form name is required'),
   });
 
   // edit form form
-  const editUserFormik = useFormik({
+  const editFormFormik = useFormik({
     enableReinitialize: true,
     initialValues: {
-      form_name: editRoom.form_name,
-      created_by: editRoom.created_by,
+      form_name: editFormInit.form_name,
+      created_by: editFormInit.created_by,
+      equipment: editFormInit.equipment,
     },
     validationSchema: editValidationSchema,
     onSubmit: async (values, { resetForm, setSubmitting, setErrors }) => {
@@ -274,10 +317,10 @@ export default function Form() {
         }
       }
       if (resetControl) {
-        const id = editRoom.id;
+        const id = editFormInit.id;
         const form_name = values.form_name;
         const created_by = values.created_by;
-        await updateRoom(id, form_name, created_by);
+        await updateForm(id, form_name, created_by);
         await loadFormList();
         resetForm();
         handleEditClose();
@@ -285,7 +328,7 @@ export default function Form() {
     },
   });
   const handleDeleteRoom = async (id) => {
-    await deleteRoom(id);
+    await deleteForm(id);
     await loadFormList();
   }
   return (
@@ -337,7 +380,7 @@ export default function Form() {
                           </Typography>
                         </Stack>
                       </TableCell>
-                      <TableCell align="left">{row.created_by_name}</TableCell>
+                      <TableCell align="left">{row.created_by.username}</TableCell>
                       <TableCell align="left">{row.equipments[0]["equipment_name"]}</TableCell>
                       <TableCell align="left">
                         <Label
@@ -371,14 +414,14 @@ export default function Form() {
                             ?
                             <MenuItem sx={{ color: 'text.secondary' }} onClick={() => { handleDisableForm(row.form_id) }}>
                               <ListItemIcon>
-                                <Icon icon={trash2Outline} width={24} height={24} />
+                                <Icon icon={eyeOffFIll} width={24} height={24} />
                               </ListItemIcon>
                               <ListItemText primary="Disable" primaryTypographyProps={{ variant: 'body2' }} />
                             </MenuItem>
                             :
                             <MenuItem sx={{ color: 'text.secondary' }} onClick={() => { handleActiveForm(row.form_id) }}>
                               <ListItemIcon>
-                                <Icon icon={trash2Outline} width={24} height={24} />
+                                <Icon icon={eyeFIll} width={24} height={24} />
                               </ListItemIcon>
                               <ListItemText primary="Active" primaryTypographyProps={{ variant: 'body2' }} />
                             </MenuItem>
@@ -460,27 +503,36 @@ export default function Form() {
                   helperText={formik.touched.form_name && formik.errors.form_name}
                   autoFocus
                 />
-                <TextField
-                  margin="normal"
-                  fullWidth
-                  required
-                  name="created_by"
-                  label="Created by"
-                  type="created_by"
-                  id="created_by"
-                  autoComplete="current-created_by"
-                  value={formik.values.created_by}
-                  onChange={formik.handleChange}
-                  error={formik.touched.created_by && Boolean(formik.errors.created_by)}
-                  helperText={formik.touched.created_by && formik.errors.created_by}
-                />
                 <Autocomplete
-                  id="equipment_id"
-                  name="equipment_id"
+                  id="created_by"
+                  name="created_by"
+                  required
+                  value={formik.values.created_by}
+                  isOptionEqualToValue={(option, value) => option.id === value.id}
+                  options={userList}
+                  getOptionLabel={(option) => option.username}
+                  onChange={(e, value) => {
+                    formik.setFieldValue('created_by', value);
+                  }}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      fullWidth
+                      label="Created by"
+                      margin="normal"
+                      error={formik.touched.created_by && Boolean(formik.errors.created_by)}
+                      helperText={formik.touched.created_by && formik.errors.created_by}
+                    />
+                  )}
+                />
+
+                <Autocomplete
+                  id="equipment"
+                  name="equipment"
                   options={equipmentList}
                   getOptionLabel={(option) => option.equipment_name}
                   onChange={(e, value) => {
-                    formik.setFieldValue('equipment_id', value.equipment_id);
+                    formik.setFieldValue('equipment', value);
                   }}
                   renderInput={(params) => (
                     <TextField
@@ -489,8 +541,8 @@ export default function Form() {
                       required
                       label="Equipment"
                       margin="normal"
-                      error={formik.touched.equipment_id && Boolean(formik.errors.equipment_id)}
-                      helperText={formik.touched.equipment_id && formik.errors.equipment_id}
+                      error={formik.touched.equipment && Boolean(formik.errors.equipment)}
+                      helperText={formik.touched.equipment && formik.errors.equipment}
                     />
                   )}
                 />
@@ -525,39 +577,72 @@ export default function Form() {
             <Typography component="h1" variant="h5">
               Edit Form
             </Typography>
-            <form onSubmit={editUserFormik.handleSubmit} noValidate sx={{ mt: 1 }}>
+            <form onSubmit={editFormFormik.handleSubmit} noValidate sx={{ mt: 1 }}>
               <TextField
                 margin="normal"
                 required
                 fullWidth
                 id="form_name"
-                label="Room Name"
+                label="Form Name"
                 name="form_name"
                 autoComplete="form_name"
-                value={editUserFormik.values.form_name}
-                onChange={editUserFormik.handleChange}
-                error={editUserFormik.touched.form_name && Boolean(editUserFormik.errors.form_name)}
-                helperText={editUserFormik.touched.form_name && editUserFormik.errors.form_name}
+                value={editFormFormik.values.form_name}
+                onChange={editFormFormik.handleChange}
+                error={editFormFormik.touched.form_name && Boolean(editFormFormik.errors.form_name)}
+                helperText={editFormFormik.touched.form_name && editFormFormik.errors.form_name}
               />
-              <TextField
-                margin="normal"
-                fullWidth
-                name="created_by"
-                label="Location"
-                type="created_by"
+              <Autocomplete
                 id="created_by"
-                autoComplete="current-created_by"
-                value={editUserFormik.values.created_by}
-                onChange={editUserFormik.handleChange}
-                error={editUserFormik.touched.created_by && Boolean(editUserFormik.errors.created_by)}
-                helperText={editUserFormik.touched.created_by && editUserFormik.errors.created_by}
+                name="created_by"
+                required
+                fullWidth
+                value={editFormFormik.values.created_by}
+                isOptionEqualToValue={(option, value) => option.id === value.id}
+                options={userList}
+                getOptionLabel={(option) => option.username}
+                onChange={(e, value) => {
+                  editFormFormik.setFieldValue('created_by', value);
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    fullWidth
+                    label="Created by"
+                    margin="normal"
+                    error={editFormFormik.touched.created_by && Boolean(editFormFormik.errors.created_by)}
+                    helperText={editFormFormik.touched.created_by && editFormFormik.errors.created_by}
+                  />
+                )}
+              />
+              <Autocomplete
+                id="equipment"
+                name="equipment"
+                required
+                fullWidth
+                value={editFormFormik.values.equipment}
+                isOptionEqualToValue={(option, value) => option.id === value.id}
+                options={equipmentList}
+                getOptionLabel={(option) => option.equipment_name}
+                onChange={(e, value) => {
+                  editFormFormik.setFieldValue('equipment', value);
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    fullWidth
+                    label="Created by"
+                    margin="normal"
+                    error={editFormFormik.touched.equipment && Boolean(editFormFormik.errors.equipment)}
+                    helperText={editFormFormik.touched.equipment && editFormFormik.errors.equipment}
+                  />
+                )}
               />
               <Button
                 type="submit"
                 fullWidth
                 variant="contained"
                 sx={{ mt: 3, mb: 2 }}
-                disabled={editUserFormik.isSubmitting}
+                disabled={editFormFormik.isSubmitting}
               >
                 Submit
               </Button>

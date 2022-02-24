@@ -4,6 +4,8 @@ import moreVerticalFill from '@iconify/icons-eva/more-vertical-fill';
 import trash2Outline from '@iconify/icons-eva/trash-2-outline';
 import plusFill from '@iconify/icons-eva/plus-fill';
 import editFill from '@iconify/icons-eva/edit-fill';
+import eyeOffFIll from '@iconify/icons-eva/eye-off-fill';
+import eyeFIll from '@iconify/icons-eva/eye-fill';
 // mui
 import {
   Button, Card, Container, Stack, Table, TableBody, TableCell, TableContainer, TablePagination, TableRow, Typography, IconButton, Menu, MenuItem, ListItemIcon, ListItemText,
@@ -325,14 +327,14 @@ export default function Question() {
                             ?
                             <MenuItem sx={{ color: 'text.secondary' }} onClick={() => { handleDisableQuestion(row.id) }}>
                               <ListItemIcon>
-                                <Icon icon={trash2Outline} width={24} height={24} />
+                                <Icon icon={eyeOffFIll} width={24} height={24} />
                               </ListItemIcon>
                               <ListItemText primary="Disable" primaryTypographyProps={{ variant: 'body2' }} />
                             </MenuItem>
                             :
                             <MenuItem sx={{ color: 'text.secondary' }} onClick={() => { handleActiveQuestion(row.id) }}>
                               <ListItemIcon>
-                                <Icon icon={trash2Outline} width={24} height={24} />
+                                <Icon icon={eyeFIll} width={24} height={24} />
                               </ListItemIcon>
                               <ListItemText primary="Active" primaryTypographyProps={{ variant: 'body2' }} />
                             </MenuItem>

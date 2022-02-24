@@ -4,6 +4,8 @@ import moreVerticalFill from '@iconify/icons-eva/more-vertical-fill';
 import trash2Outline from '@iconify/icons-eva/trash-2-outline';
 import plusFill from '@iconify/icons-eva/plus-fill';
 import editFill from '@iconify/icons-eva/edit-fill';
+import eyeOffFIll from '@iconify/icons-eva/eye-off-fill';
+import eyeFIll from '@iconify/icons-eva/eye-fill';
 // mui
 import {
   Button, Card, Container, Stack, Table, TableBody, TableCell, TableContainer, TablePagination, TableRow, Typography, IconButton, Menu, MenuItem, ListItemIcon, ListItemText, Avatar,
@@ -14,7 +16,7 @@ import { useEffect, useState } from 'react';
 // router
 import Page from 'src/components/Page';
 // api
-import { getUsers, activeUser, disableUser, checkUser, createUser, updateUser,deleteUser} from 'src/services/user.context';
+import { getUsers, activeUser, disableUser, checkUser, createUser, updateUser, deleteUser } from 'src/services/user.context';
 import Label from 'src/components/Label';
 import EnhancedTableHead from 'src/components/EnchancedTableHead';
 import { filter } from 'lodash';
@@ -23,6 +25,8 @@ import SearchNotFound from 'src/components/SearchNotFound';
 // form
 import { useFormik } from 'formik';
 import * as yup from 'yup';
+//
+import jwt_decode from "jwt-decode";
 
 export default function User() {
 
@@ -31,7 +35,9 @@ export default function User() {
   const loadUserList = async () => {
     await getUsers()
       .then((response) => {
-        setUserItems(response.data);
+        let data = response.data;
+        let user_id = jwt_decode(localStorage.getItem('token')).user_id
+        setUserItems(data.filter(data => data.id !== user_id));
       });
   }
   useEffect(() => {
@@ -348,14 +354,14 @@ export default function User() {
                             ?
                             <MenuItem sx={{ color: 'text.secondary' }} onClick={() => { handleDisableUser(row.id) }}>
                               <ListItemIcon>
-                                <Icon icon={trash2Outline} width={24} height={24} />
+                                <Icon icon={eyeOffFIll} width={24} height={24} />
                               </ListItemIcon>
                               <ListItemText primary="Disable" primaryTypographyProps={{ variant: 'body2' }} />
                             </MenuItem>
                             :
                             <MenuItem sx={{ color: 'text.secondary' }} onClick={() => { handleActiveUesr(row.id) }}>
                               <ListItemIcon>
-                                <Icon icon={trash2Outline} width={24} height={24} />
+                                <Icon icon={eyeFIll} width={24} height={24} />
                               </ListItemIcon>
                               <ListItemText primary="Active" primaryTypographyProps={{ variant: 'body2' }} />
                             </MenuItem>

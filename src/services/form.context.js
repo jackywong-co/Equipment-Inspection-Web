@@ -30,12 +30,23 @@ export const disableForm = (id) => {
       })
   )
 }
-export const createForm = (Form_name, location) => {
+export const createForm = (form_name, created_by, equipments, questions) => {
+  let equipment_id_list = []
+  for (let x in equipments){
+    equipment_id_list.push(equipments[x].equipment_id)
+  }
+  
+  let question_id_list = []
+  for (let x in questions){
+    question_id_list.push(questions[x].id)
+  }
   return (
     axiosInstance
       .post('form/', {
-        Form_name: Form_name,
-        location: location
+        form_name: form_name,
+        created_by: created_by.id,
+        equipments: equipment_id_list,
+        questions: question_id_list
       })
   )
 }
