@@ -18,6 +18,7 @@ import Page from 'src/components/Page';
 // api
 import { getRooms, checkRoom, activeRoom, disableRoom, createRoom, updateRoom, deleteRoom } from 'src/services/room.context';
 import { getUsers } from 'src/services/user.context';
+import { getQuestions } from 'src/services/question.context';
 import { getEquipments, checkEquipment, activeEquipment, disableEquipment, createEquipment, updateEquipment, deleteEquipment } from 'src/services/equipment.context';
 import { getForms, checkForm, activeForm, disableForm, createForm, updateForm, deleteForm } from '../../services/form.context';
 import Label from 'src/components/Label';
@@ -32,7 +33,16 @@ import * as yup from 'yup';
 import jwt_decode from "jwt-decode";
 
 export default function Form() {
-  
+
+  const [questionList, setQuestionList] = useState([]);
+
+  const loadQuestionList = async () => {
+    await getQuestions()
+      .then((response) => {
+        setQuestionList(response.data);
+      });
+  }
+
   const [userList, setUserList] = useState([]);
 
   const loadUserList = async () => {
