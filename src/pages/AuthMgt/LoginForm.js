@@ -1,7 +1,7 @@
 import React, { useContext, useState } from 'react';
 import { useNavigate } from "react-router-dom";
-import axiosInstance from '../../../services/axios.instance';
-import AuthContext from "../../../services/auth.context";
+import axiosInstance from '../../services/axios.instance';
+import AuthContext from "../../services/auth.context";
 // mui
 import Button from '@mui/material/Button';
 import CssBaseline from '@mui/material/CssBaseline';
