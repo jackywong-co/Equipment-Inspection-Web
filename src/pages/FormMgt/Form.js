@@ -33,6 +33,15 @@ import * as yup from 'yup';
 import jwt_decode from "jwt-decode";
 
 export default function Form() {
+  const [roomList, setRoomList] = useState([]);
+
+  const loadRoomList = async () => {
+    await getRooms()
+      .then((response) => {
+        // console.log(response.data);
+        setRoomList(response.data);
+      });
+  }
 
   const [questionList, setQuestionList] = useState([]);
 
@@ -73,6 +82,10 @@ export default function Form() {
 
   useEffect(() => {
     loadFormList();
+    loadQuestionList();
+    loadRoomList();
+    loadUserList();
+    loadEquipmentList();
   }, []);
 
 
@@ -182,29 +195,12 @@ export default function Form() {
 
   const [createFormInit, setCreateFormInit] = useState({
     created_by: {},
-    question: [
-      {
-        "id": "56d24e82-fdb7-4f15-8baf-b721cbc8a854",
-        "question_text": "Normal ?",
-        "is_active": true
-      },
-      {
-        "id": "040079f3-9049-4c78-a32b-7b45a7e6ee55",
-        "question_text": "Defects ?",
-        "is_active": true
-      },
-      {
-        "id": "d5d60df8-22fa-496f-86b9-1c5e6c9e45dd",
-        "question_text": "Follow up actions ?",
-        "is_active": true
-      }
-    ],
+    question: [],
   });
   // add form
   const [addOpen, setAddOpen] = useState(false);
-  const handleAddClick = () => {
-    loadUserList();
-    loadEquipmentList();
+  const handleAddClick = async () => {
+    console.log(roomList)
     let user_id = jwt_decode(localStorage.getItem('token')).user_id
     let user
     for (let x in userList) {
@@ -213,8 +209,10 @@ export default function Form() {
         console.log(user)
       }
     };
+
     setCreateFormInit({
       created_by: user,
+      question: questionList,
     })
     setAddOpen(true);
   };
@@ -338,7 +336,7 @@ export default function Form() {
       }
     },
   });
-  const handleDeleteRoom = async (id) => {
+  const handleDeleteForm = async (id) => {
     await deleteForm(id);
     await loadFormList();
   }
@@ -443,7 +441,7 @@ export default function Form() {
                             </ListItemIcon>
                             <ListItemText primary="Edit" primaryTypographyProps={{ variant: 'body2' }} />
                           </MenuItem>
-                          <MenuItem sx={{ color: 'text.secondary' }} onClick={() => { handleDeleteRoom(row.form_id) }}>
+                          <MenuItem sx={{ color: 'text.secondary' }} onClick={() => { handleDeleteForm(row.form_id) }}>
                             <ListItemIcon>
                               <Icon icon={trash2Outline} width={24} height={24} />
                             </ListItemIcon>
@@ -544,6 +542,7 @@ export default function Form() {
                   getOptionLabel={(option) => option.equipment_name}
                   onChange={(e, value) => {
                     formik.setFieldValue('equipment', value);
+                    formik.setFieldValue('form_name', value.equipment_name);
                   }}
                   renderInput={(params) => (
                     <TextField
@@ -554,6 +553,27 @@ export default function Form() {
                       margin="normal"
                       error={formik.touched.equipment && Boolean(formik.errors.equipment)}
                       helperText={formik.touched.equipment && formik.errors.equipment}
+                    />
+                  )}
+                />
+                
+                <Autocomplete
+                  id="room"
+                  name="room"
+                  options={roomList}
+                  getOptionLabel={(option) => option.room_name}
+                  onChange={(e, value) => {
+                    formik.setFieldValue('room', value);
+                  }}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      fullWidth
+                      required
+                      label="Room"
+                      margin="normal"
+                      error={formik.touched.room && Boolean(formik.errors.room)}
+                      helperText={formik.touched.room && formik.errors.room}
                     />
                   )}
                 />
