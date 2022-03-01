@@ -32,12 +32,12 @@ export const disableForm = (id) => {
 }
 export const createForm = (form_name, created_by, equipments, questions) => {
   let equipment_id_list = []
-  for (let x in equipments){
+  for (let x in equipments) {
     equipment_id_list.push(equipments[x].equipment_id)
   }
-  
+
   let question_id_list = []
-  for (let x in questions){
+  for (let x in questions) {
     question_id_list.push(questions[x].id)
   }
   return (
@@ -50,12 +50,17 @@ export const createForm = (form_name, created_by, equipments, questions) => {
       })
   )
 }
-export const updateForm = (id, form_name, location) => {
+export const updateForm = (id, form_name, created_by, equipments) => {
+  let equipment_id_list = []
+  for (let x in equipments) {
+    equipment_id_list.push(equipments[x].equipment_id)
+  }
   return (
     axiosInstance
       .put('form/' + id + '/', {
         form_name: form_name,
-        location: location
+        created_by: created_by,
+        equipments: equipment_id_list,
       })
   )
 }

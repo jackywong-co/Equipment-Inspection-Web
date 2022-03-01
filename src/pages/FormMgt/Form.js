@@ -200,13 +200,13 @@ export default function Form() {
   // add form
   const [addOpen, setAddOpen] = useState(false);
   const handleAddClick = async () => {
-    console.log(roomList)
+    // console.log(roomList)
     let user_id = jwt_decode(localStorage.getItem('token')).user_id
     let user
     for (let x in userList) {
       if (user_id === userList[x].id) {
         user = userList[x];
-        console.log(user)
+        // console.log(user)
       }
     };
 
@@ -279,13 +279,13 @@ export default function Form() {
         equipment = formItems[x].equipments[0];
       }
     }
-    console.log(formItems)
-    console.log({
-      id: id,
-      form_name: form_name,
-      created_by: created_by,
-      equipment: equipment,
-    })
+    // console.log(formItems)
+    // console.log({
+    //   id: id,
+    //   form_name: form_name,
+    //   created_by: created_by,
+    //   equipment: equipment,
+    // })
     setEditFormInit({
       id: id,
       form_name: form_name,
@@ -329,7 +329,11 @@ export default function Form() {
         const id = editFormInit.id;
         const form_name = values.form_name;
         const created_by = values.created_by;
-        await updateForm(id, form_name, created_by);
+        let equipment = []
+        equipment.push(values.equipment);
+        // console.log(values.equipment)
+        // const equipment = values.equipment;
+        await updateForm(id, form_name, created_by, equipment);
         await loadFormList();
         resetForm();
         handleEditClose();
@@ -539,10 +543,10 @@ export default function Form() {
                   id="equipment"
                   name="equipment"
                   options={equipmentList}
-                  getOptionLabel={(option) => option.equipment_name}
+                  getOptionLabel={(option) => option.equipment_name + " - " + option.room_name}
                   onChange={(e, value) => {
                     formik.setFieldValue('equipment', value);
-                    formik.setFieldValue('form_name', value.equipment_name);
+                    formik.setFieldValue('form_name', value.equipment_name + " - " + value.room_name);
                   }}
                   renderInput={(params) => (
                     <TextField
@@ -556,27 +560,8 @@ export default function Form() {
                     />
                   )}
                 />
-                
-                <Autocomplete
-                  id="room"
-                  name="room"
-                  options={roomList}
-                  getOptionLabel={(option) => option.room_name}
-                  onChange={(e, value) => {
-                    formik.setFieldValue('room', value);
-                  }}
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      fullWidth
-                      required
-                      label="Room"
-                      margin="normal"
-                      error={formik.touched.room && Boolean(formik.errors.room)}
-                      helperText={formik.touched.room && formik.errors.room}
-                    />
-                  )}
-                />
+
+
                 <Button
                   type="submit"
                   fullWidth
@@ -653,15 +638,16 @@ export default function Form() {
                 value={editFormFormik.values.equipment}
                 isOptionEqualToValue={(option, value) => option.id === value.id}
                 options={equipmentList}
-                getOptionLabel={(option) => option.equipment_name}
+                getOptionLabel={(option) => option.equipment_name + " - " + option.room_name}
                 onChange={(e, value) => {
                   editFormFormik.setFieldValue('equipment', value);
+                  editFormFormik.setFieldValue('form_name', value.equipment_name + " - " + value.room_name);
                 }}
                 renderInput={(params) => (
                   <TextField
                     {...params}
                     fullWidth
-                    label="Created by"
+                    label="Equipment"
                     margin="normal"
                     error={editFormFormik.touched.equipment && Boolean(editFormFormik.errors.equipment)}
                     helperText={editFormFormik.touched.equipment && editFormFormik.errors.equipment}
