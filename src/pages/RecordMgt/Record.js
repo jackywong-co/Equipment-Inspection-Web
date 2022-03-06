@@ -17,7 +17,7 @@ import { useEffect, useState } from 'react';
 import Page from 'src/components/Page';
 // api
 import { getRooms, checkRoom, activeRoom, disableRoom, createRoom, updateRoom, deleteRoom } from 'src/services/room.context';
-import { getAnswers,checkAnswer,activeAnswer,disableAnswer,createAnswer, } from 'src/services/answer.context';
+import { getAnswers, checkAnswer, activeAnswer, disableAnswer, createAnswer, updateAnswer,deleteAnswer} from 'src/services/answer.context';
 import Label from 'src/components/Label';
 import EnhancedTableHead from 'src/components/EnchancedTableHead';
 import { filter } from 'lodash';
@@ -125,7 +125,7 @@ export default function Record() {
     setAnchorEl(null);
   };
 
-  // check record is active
+  // check answer is active
   const [answerStatus, setAnswerStatus] = useState();
   const checkCheckStatus = (id) => {
     checkAnswer(id)
@@ -133,21 +133,21 @@ export default function Record() {
         setAnswerStatus(response.data.is_active)
       })
   }
-  // active room
-  const handleActiveRoom = async (id) => {
-    await activeRoom(id)
+  // active answer
+  const handleActiveAnswer = async (id) => {
+    await activeAnswer(id)
     await loadAnswerList()
     handleElClose();
   }
 
-  // disable room
-  const handleDisableRoom = async (id) => {
-    await disableRoom(id)
+  // disable answer
+  const handleDisableAnswer = async (id) => {
+    await disableAnswer(id)
     await loadAnswerList()
     handleElClose();
   };
 
-  // add room
+  // add answer
   const [addOpen, setAddOpen] = useState(false);
   const handleAddClick = () => {
     setAddOpen(true);
@@ -257,8 +257,8 @@ export default function Record() {
       }
     },
   });
-  const handleDeleteRoom = async (id) => {
-    await deleteRoom(id);
+  const handleDeleteAnswer = async (id) => {
+    await deleteAnswer(id);
     await loadAnswerList();
   }
   return (
@@ -343,14 +343,14 @@ export default function Record() {
                         >
                           {answerStatus
                             ?
-                            <MenuItem sx={{ color: 'text.secondary' }} onClick={() => { handleDisableRoom(row.id) }}>
+                            <MenuItem sx={{ color: 'text.secondary' }} onClick={() => { handleDisableAnswer(row.id) }}>
                               <ListItemIcon>
                                 <Icon icon={eyeOffFIll} width={24} height={24} />
                               </ListItemIcon>
                               <ListItemText primary="Disable" primaryTypographyProps={{ variant: 'body2' }} />
                             </MenuItem>
                             :
-                            <MenuItem sx={{ color: 'text.secondary' }} onClick={() => { handleActiveRoom(row.id) }}>
+                            <MenuItem sx={{ color: 'text.secondary' }} onClick={() => { handleActiveAnswer(row.id) }}>
                               <ListItemIcon>
                                 <Icon icon={eyeFIll} width={24} height={24} />
                               </ListItemIcon>
@@ -363,7 +363,7 @@ export default function Record() {
                             </ListItemIcon>
                             <ListItemText primary="Edit" primaryTypographyProps={{ variant: 'body2' }} />
                           </MenuItem>
-                          <MenuItem sx={{ color: 'text.secondary' }} onClick={() => { handleDeleteRoom(row.id) }}>
+                          <MenuItem sx={{ color: 'text.secondary' }} onClick={() => { handleDeleteAnswer(row.id) }}>
                             <ListItemIcon>
                               <Icon icon={trash2Outline} width={24} height={24} />
                             </ListItemIcon>
