@@ -428,7 +428,9 @@ export default function User() {
               <Typography component="h1" variant="h5">
                 Create User
               </Typography>
-              <form onSubmit={formik.handleSubmit} noValidate sx={{ mt: 1 }}>
+              <form onSubmit={formik.handleSubmit} noValidate sx={{ mt: 1 }} style={{
+                width: 400,
+              }}>
                 <TextField
                   margin="normal"
                   required
@@ -506,7 +508,9 @@ export default function User() {
             <Typography component="h1" variant="h5">
               Edit User
             </Typography>
-            <form onSubmit={editUserFormik.handleSubmit} noValidate sx={{ mt: 1 }}>
+            <form onSubmit={editUserFormik.handleSubmit} noValidate sx={{ mt: 1 }} style={{
+              width: 400,
+            }}>
               <TextField
                 margin="normal"
                 required

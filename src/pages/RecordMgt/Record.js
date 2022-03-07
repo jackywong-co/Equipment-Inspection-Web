@@ -6,10 +6,11 @@ import plusFill from '@iconify/icons-eva/plus-fill';
 import editFill from '@iconify/icons-eva/edit-fill';
 import eyeOffFIll from '@iconify/icons-eva/eye-off-fill';
 import eyeFIll from '@iconify/icons-eva/eye-fill';
+import PhotoCamera from '@mui/icons-material/PhotoCamera';
 // mui
 import {
   Button, Card, Container, Stack, Table, TableBody, TableCell, TableContainer, TablePagination, TableRow, Typography, IconButton, Menu, MenuItem, ListItemIcon, ListItemText,
-  Dialog, TextField, Box, CssBaseline
+  Dialog, TextField, Box, CssBaseline, Autocomplete, Input
 } from '@mui/material';
 // react
 import { useEffect, useState } from 'react';
@@ -17,7 +18,10 @@ import { useEffect, useState } from 'react';
 import Page from 'src/components/Page';
 // api
 import { getRooms, checkRoom, activeRoom, disableRoom, createRoom, updateRoom, deleteRoom } from 'src/services/room.context';
-import { getAnswers, checkAnswer, activeAnswer, disableAnswer, createAnswer, updateAnswer,deleteAnswer} from 'src/services/answer.context';
+import { getAnswers, checkAnswer, activeAnswer, disableAnswer, createAnswer, updateAnswer, deleteAnswer } from 'src/services/answer.context';
+import { getUsers } from 'src/services/user.context';
+import { getForms } from 'src/services/form.context';
+import { getQuestions } from 'src/services/question.context';
 import Label from 'src/components/Label';
 import EnhancedTableHead from 'src/components/EnchancedTableHead';
 import { filter } from 'lodash';
@@ -26,6 +30,8 @@ import SearchNotFound from 'src/components/SearchNotFound';
 // form
 import { useFormik } from 'formik';
 import * as yup from 'yup';
+//
+import jwt_decode from "jwt-decode";
 
 export default function Record() {
 
@@ -34,13 +40,42 @@ export default function Record() {
   const loadAnswerList = async () => {
     await getAnswers()
       .then((response) => {
-        console.log(response.data);
         setAnswerList(response.data);
       });
   }
 
+  const [userList, setUserList] = useState([]);
+
+  const loadUserList = async () => {
+    await getUsers()
+      .then((response) => {
+        setUserList(response.data);
+      });
+  }
+  const [formList, setFormList] = useState([]);
+
+  const loadFormList = async () => {
+    await getForms()
+      .then((response) => {
+        console.log(response.data)
+        setFormList(response.data);
+      });
+  }
+  const [questionList, setQuestionList] = useState([]);
+
+  const loadQuestionList = async () => {
+    await getQuestions()
+      .then((response) => {
+        setQuestionList(response.data);
+      });
+  }
+
+
   useEffect(() => {
+    loadQuestionList();
     loadAnswerList();
+    loadUserList();
+    loadFormList();
   }, []);
 
 
@@ -52,6 +87,7 @@ export default function Record() {
     { id: 'equipment_name', label: 'Equipment Name', alignRight: false },
     { id: 'created_by', label: 'Created by', alignRight: false },
     { id: 'room_name', label: 'Room', alignRight: false },
+    { id: 'question_text', label: 'Question', alignRight: false },
     { id: 'created_at', label: 'Created At', alignRight: false },
     { id: 'is_active', label: 'Status', alignRight: false },
     { id: '' }
@@ -147,49 +183,67 @@ export default function Record() {
     handleElClose();
   };
 
+  const [createRecordInit, setCreateRecordInit] = useState({
+    created_by: {},
+  });
+
   // add answer
   const [addOpen, setAddOpen] = useState(false);
   const handleAddClick = () => {
+    let user_id = jwt_decode(localStorage.getItem('token')).user_id
+    let user
+    for (let x in userList) {
+      if (user_id === userList[x].id) {
+        user = userList[x];
+      }
+    }
+
+    setCreateRecordInit({
+      created_by: user,
+    })
+    setUploadImageButton(false)
     setAddOpen(true);
   };
   const handleAddClose = () => {
     setAddOpen(false);
   };
 
-  // add room form 
+  const [uploadImageButton, setUploadImageButton] = useState(false);
+
+  // add record form 
   const validationSchema = yup.object({
-    room_name: yup
-      .string('Enter Room Name')
-      .required('Room Name is required'),
-    location: yup
-      .string('Enter Location')
+    answer_text: yup
+      .string('Enter your answer'),
   });
 
+
   const formik = useFormik({
+    enableReinitialize: true,
     initialValues: {
-      room_name: '',
-      location: '',
+      created_by: createRecordInit.created_by,
     },
     validationSchema: validationSchema,
     onSubmit: async (values, { resetForm, setSubmitting, setErrors }) => {
       setSubmitting(false);
-      let resetControl = true;
-      for (let x in answerList) {
-        console.log(answerList[x].room_name)
-        let roomNameList = answerList[x].room_name
-        if (values.room_name === roomNameList) {
-          setErrors({ room_name: 'Room Name in used' });
-          resetControl = false;
-        }
-      }
-      if (resetControl) {
-        const room_name = values.room_name;
-        const location = values.location;
-        await createRoom(room_name, location);
-        await loadAnswerList();
-        resetForm();
-        handleAddClose();
-      }
+
+      const answer_text = values.answer_text;
+      const form = values.form;
+      const created_by = values.created_by;
+      const question = values.question;
+      const image = values.image;
+
+      console.log({
+        "answer_text": answer_text,
+        "form": form,
+        "created_by": created_by,
+        "question": question,
+        "image": image
+      })
+
+      await createAnswer(answer_text, form, created_by, question, image);
+      await loadAnswerList();
+      resetForm();
+      handleAddClose();
     },
   });
 
@@ -312,6 +366,7 @@ export default function Record() {
                       </TableCell>
                       <TableCell align="left">{row.created_by.username}</TableCell>
                       <TableCell align="left">{row.room_name}</TableCell>
+                      <TableCell align="left">{row.question_text}</TableCell>
                       <TableCell align="left">{row.created_at}</TableCell>
                       <TableCell align="left">
                         <Label
@@ -357,12 +412,12 @@ export default function Record() {
                               <ListItemText primary="Active" primaryTypographyProps={{ variant: 'body2' }} />
                             </MenuItem>
                           }
-                          <MenuItem sx={{ color: 'text.secondary' }} onClick={() => { handleEditClick(row.id) }}>
+                          {/* <MenuItem sx={{ color: 'text.secondary' }} onClick={() => { handleEditClick(row.id) }}>
                             <ListItemIcon>
                               <Icon icon={editFill} width={24} height={24} />
                             </ListItemIcon>
                             <ListItemText primary="Edit" primaryTypographyProps={{ variant: 'body2' }} />
-                          </MenuItem>
+                          </MenuItem> */}
                           <MenuItem sx={{ color: 'text.secondary' }} onClick={() => { handleDeleteAnswer(row.id) }}>
                             <ListItemIcon>
                               <Icon icon={trash2Outline} width={24} height={24} />
@@ -405,7 +460,7 @@ export default function Record() {
         {/* add dialoag form */}
         <Dialog open={addOpen} onClose={handleAddClose}>
 
-          {/* add room form */}
+          {/* add record form */}
           <Container component="main" maxWidth="xs">
             <CssBaseline />
             <Box
@@ -417,36 +472,110 @@ export default function Record() {
               }}
             >
               <Typography component="h1" variant="h5">
-                Create Room
+                Create Record
               </Typography>
-              <form onSubmit={formik.handleSubmit} noValidate sx={{ mt: 1 }}>
+              <form onSubmit={formik.handleSubmit} noValidate sx={{ mt: 1 }} style={{
+                width: 400,
+              }}>
                 <TextField
                   margin="normal"
-                  required
                   fullWidth
-                  id="room_name"
-                  label="Room Name"
-                  name="room_name"
-                  autoComplete="room_name"
-                  value={formik.values.room_name}
+                  id="answer_text"
+                  label="Answer"
+                  name="answer_text"
+                  value={formik.values.answer_text}
                   onChange={formik.handleChange}
-                  error={formik.touched.room_name && Boolean(formik.errors.room_name)}
-                  helperText={formik.touched.room_name && formik.errors.room_name}
+                  error={formik.touched.answer_text && Boolean(formik.errors.answer_text)}
+                  helperText={formik.touched.answer_text && formik.errors.answer_text}
                   autoFocus
                 />
-                <TextField
-                  margin="normal"
+
+                <Autocomplete
+                  id="form"
+                  name="form"
+                  required
                   fullWidth
-                  name="location"
-                  label="Location"
-                  type="location"
-                  id="location"
-                  autoComplete="current-location"
-                  value={formik.values.location}
-                  onChange={formik.handleChange}
-                  error={formik.touched.location && Boolean(formik.errors.location)}
-                  helperText={formik.touched.location && formik.errors.location}
+                  options={formList}
+                  getOptionLabel={(option) => option.form_name}
+                  onChange={(e, value) => {
+                    formik.setFieldValue('form', value);
+                  }}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      fullWidth
+                      required
+                      label="Form"
+                      margin="normal"
+                      error={formik.touched.form && Boolean(formik.errors.form)}
+                      helperText={formik.touched.form && formik.errors.form}
+                    />
+                  )}
                 />
+                <Autocomplete
+                  id="created_by"
+                  name="created_by"
+                  required
+                  fullWidth
+                  value={formik.values.created_by}
+                  isOptionEqualToValue={(option, value) => option.id === value.id}
+                  options={userList}
+                  getOptionLabel={(option) => option.username}
+                  onChange={(e, value) => {
+                    formik.setFieldValue('created_by', value);
+                  }}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      fullWidth
+                      required
+                      label="Created by"
+                      margin="normal"
+                      error={formik.touched.created_by && Boolean(formik.errors.created_by)}
+                      helperText={formik.touched.created_by && formik.errors.created_by}
+                    />
+                  )}
+                />
+                <Autocomplete
+                  id="question"
+                  name="question"
+                  required
+                  fullWidth
+                  options={questionList}
+                  getOptionLabel={(option) => option.question_text}
+                  onChange={(e, value) => {
+                    formik.setFieldValue('question', value);
+                    console.log(questionList[2])
+                    console.log(value.id);
+                    setUploadImageButton(questionList[2].id === value.id ? true : false)
+                  }}
+
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      fullWidth
+                      required
+                      label="Question"
+                      margin="normal"
+                      error={formik.touched.question && Boolean(formik.errors.question)}
+                      helperText={formik.touched.question && formik.errors.question}
+                    />
+                  )}
+                />
+                {uploadImageButton ?
+                  <Input
+                    fullWidth
+                    id="file"
+                    type="file"
+                    name="image"
+                    accept="image/*"
+                    onChange={(e, value) => {
+                      formik.setFieldValue('image', e.currentTarget.files[0]);
+                    }}
+                  />
+                  : ""}
+
+
                 <Button
                   type="submit"
                   fullWidth
@@ -460,7 +589,7 @@ export default function Record() {
             </Box>
           </Container>
         </Dialog>
-      </Container>
+      </Container >
 
       <Dialog open={editOpen} onClose={handleEditClose}>
 
@@ -518,6 +647,6 @@ export default function Record() {
           </Box>
         </Container>
       </Dialog>
-    </Page>
+    </Page >
   );
 }

@@ -208,8 +208,7 @@ export default function Form() {
         user = userList[x];
         // console.log(user)
       }
-    };
-
+    }
     setCreateFormInit({
       created_by: user,
       question: questionList,
@@ -501,7 +500,9 @@ export default function Form() {
               <Typography component="h1" variant="h5">
                 Create Form
               </Typography>
-              <form onSubmit={formik.handleSubmit} noValidate sx={{ mt: 1 }}>
+              <form onSubmit={formik.handleSubmit} noValidate sx={{ mt: 1 }} style={{
+                width: 400,
+              }}>
                 <TextField
                   margin="normal"
                   required
@@ -593,7 +594,9 @@ export default function Form() {
             <Typography component="h1" variant="h5">
               Edit Form
             </Typography>
-            <form onSubmit={editFormFormik.handleSubmit} noValidate sx={{ mt: 1 }}>
+            <form onSubmit={editFormFormik.handleSubmit} noValidate sx={{ mt: 1 }} style={{
+              width: 400,
+            }}>
               <TextField
                 margin="normal"
                 required

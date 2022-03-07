@@ -246,6 +246,7 @@ export default function Room() {
         }
       }
       if (resetControl) {
+        
         const id = editRoom.id;
         const room_name = values.room_name;
         const location = values.location;
@@ -416,7 +417,9 @@ export default function Room() {
               <Typography component="h1" variant="h5">
                 Create Room
               </Typography>
-              <form onSubmit={formik.handleSubmit} noValidate sx={{ mt: 1 }}>
+              <form onSubmit={formik.handleSubmit} noValidate sx={{ mt: 1 }} style={{
+                width: 400,
+              }}>
                 <TextField
                   margin="normal"
                   required
@@ -475,7 +478,9 @@ export default function Room() {
             <Typography component="h1" variant="h5">
               Edit Form
             </Typography>
-            <form onSubmit={editUserFormik.handleSubmit} noValidate sx={{ mt: 1 }}>
+            <form onSubmit={editUserFormik.handleSubmit} noValidate sx={{ mt: 1 }} style={{
+              width: 400,
+            }}>
               <TextField
                 margin="normal"
                 required
