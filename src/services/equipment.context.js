@@ -53,3 +53,18 @@ export const deleteEquipment = (id) => {
       .delete('equipment/' + id + '/')
   )
 }
+export const uploadEquipmentImage = (id, image) => {
+  console.log({
+    "id": id,
+    "image": image
+  })
+  const config = { headers: { 'Content-Type': 'multipart/form-data' } }
+  let formData = new FormData();
+  formData.append('equipment', id);
+  if (image) {
+    formData.append('image', image);
+  }
+  return (
+    axiosInstance.post('equipmentImage/', formData, config)
+  )
+}

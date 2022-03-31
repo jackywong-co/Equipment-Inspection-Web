@@ -9,7 +9,7 @@ import eyeFIll from '@iconify/icons-eva/eye-fill';
 // mui
 import {
   Button, Card, Container, Stack, Table, TableBody, TableCell, TableContainer, TablePagination, TableRow, Typography, IconButton, Menu, MenuItem, ListItemIcon, ListItemText,
-  Dialog, TextField, Box, CssBaseline, Autocomplete
+  Dialog, TextField, Box, CssBaseline, Autocomplete, Input
 } from '@mui/material';
 // react
 import { useEffect, useState } from 'react';
@@ -17,7 +17,7 @@ import { useEffect, useState } from 'react';
 import Page from 'src/components/Page';
 // api
 import { getRooms } from 'src/services/room.context';
-import { getEquipments, checkEquipment, activeEquipment, disableEquipment, createEquipment, updateEquipment, deleteEquipment } from 'src/services/equipment.context';
+import { getEquipments, checkEquipment, activeEquipment, disableEquipment, createEquipment, updateEquipment, deleteEquipment, uploadEquipmentImage } from 'src/services/equipment.context';
 import Label from 'src/components/Label';
 import EnhancedTableHead from 'src/components/EnchancedTableHead';
 import { filter } from 'lodash';
@@ -244,6 +244,10 @@ export default function Equipment() {
   const handleEditClose = () => {
     setEditOpen(false);
   };
+
+
+
+
   const editValidationSchema = yup.object({
     equipment_name: yup
       .string('Enter Equipment Name')
@@ -251,10 +255,51 @@ export default function Equipment() {
     equipment_code: yup
       .string('Enter Equipment Code'),
   });
+
+  const [uploadImage, setUploadImage] = useState({
+    id: '',
+    image: '',
+  });
+  const [uploadImageOpen, setUploadImageOpen] = useState(false);
+  const handleUploadClick = (id) => {
+    setUploadImage({
+      id: id,
+    });
+    setUploadImageOpen(true);
+    handleElClose();
+  }
+  const handleUploadClose = () => {
+    setUploadImageOpen(false);
+  };
+  const uploadEquipmentImageValidationSchema = yup.object({
+  });
+  const uploadEquipmentImageFormik = useFormik({
+    enableReinitialize: true,
+    initialValues: {
+    },
+    validationSchema: uploadEquipmentImageValidationSchema,
+    onSubmit: async (values, { resetForm, setSubmitting, setErrors }) => {
+      setSubmitting(false);
+      const id = uploadImage.id;
+      const image = values.image;
+
+      await uploadEquipmentImage(id, image);
+      await loadEquipmentList();
+      resetForm();
+      handleUploadClose();
+    },
+  })
+
+
   const handleDeleteEquipment = async (id) => {
     await deleteEquipment(id);
     await loadEquipmentList();
   }
+
+
+
+
+
   // edit equipment form
   const editUserFormik = useFormik({
     enableReinitialize: true,
@@ -372,6 +417,12 @@ export default function Equipment() {
                           transformOrigin={{ vertical: 'top', horizontal: 'right' }}
 
                         >
+                          <MenuItem sx={{ color: 'text.secondary' }} onClick={() => { handleUploadClick(row.equipment_id) }}>
+                            <ListItemIcon>
+                              <Icon icon={editFill} width={24} height={24} />
+                            </ListItemIcon>
+                            <ListItemText primary="Upload Image" primaryTypographyProps={{ variant: 'body2' }} />
+                          </MenuItem>
                           {equipmentStatus
                             ?
                             <MenuItem sx={{ color: 'text.secondary' }} onClick={() => { handleDisableEquipment(row.equipment_id) }}>
@@ -451,8 +502,8 @@ export default function Equipment() {
                 Create Equipment
               </Typography>
               <form onSubmit={formik.handleSubmit} noValidate sx={{ mt: 1 }} style={{
-                    width: 400,
-                  }}> 
+                width: 400,
+              }}>
                 <TextField
                   margin="normal"
                   required
@@ -513,88 +564,139 @@ export default function Equipment() {
             </Box>
           </Container>
         </Dialog>
+
+        <Dialog open={editOpen} onClose={handleEditClose}>
+
+          {/* edit user form */}
+          <Container component="main" maxWidth="xs">
+            <CssBaseline />
+            <Box
+              sx={{
+                marginTop: 8,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+              }}
+            >
+              <Typography component="h1" variant="h5">
+                Edit Form
+              </Typography>
+              <form onSubmit={editUserFormik.handleSubmit} noValidate sx={{ mt: 1 }} style={{
+                width: 400,
+              }}>
+                <TextField
+                  margin="normal"
+                  required
+                  fullWidth
+                  id="equipment_name"
+                  label="Equipment Name"
+                  name="equipment_name"
+                  autoComplete="equipment_name"
+                  value={editUserFormik.values.equipment_name}
+                  onChange={editUserFormik.handleChange}
+                  error={editUserFormik.touched.equipment_name && Boolean(editUserFormik.errors.equipment_name)}
+                  helperText={editUserFormik.touched.equipment_name && editUserFormik.errors.equipment_name}
+                />
+                <TextField
+                  margin="normal"
+                  fullWidth
+                  name="equipment_code"
+                  label="Equipment Code"
+                  type="equipment_code"
+                  id="equipment_code"
+                  autoComplete="current-equipment_code"
+                  value={editUserFormik.values.equipment_code}
+                  onChange={editUserFormik.handleChange}
+                  error={editUserFormik.touched.equipment_code && Boolean(editUserFormik.errors.equipment_code)}
+                  helperText={editUserFormik.touched.equipment_code && editUserFormik.errors.equipment_code}
+                />
+                <Autocomplete
+                  id="room"
+                  name="room"
+                  required
+                  value={editUserFormik.values.room}
+                  isOptionEqualToValue={(option, value) => option.id === value.id}
+                  options={roomList}
+                  getOptionLabel={(option) => option.room_name}
+                  onChange={(e, value) => {
+                    editUserFormik.setFieldValue('room', value);
+                  }}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      fullWidth
+                      label="Room"
+                      margin="normal"
+                      error={editUserFormik.touched.room && Boolean(editUserFormik.errors.room)}
+                      helperText={editUserFormik.touched.room && editUserFormik.errors.room}
+                    />
+                  )}
+                />
+                <Button
+                  type="submit"
+                  fullWidth
+                  variant="contained"
+                  sx={{ mt: 3, mb: 2 }}
+                  disabled={editUserFormik.isSubmitting}
+                >
+                  Submit
+                </Button>
+              </form>
+            </Box>
+          </Container>
+        </Dialog>
+
+        <Dialog open={uploadImageOpen} onClose={handleUploadClose}>
+
+          {/* image upload form */}
+          <Container component="main" maxWidth="xs">
+            <CssBaseline />
+            <Box
+              sx={{
+                marginTop: 8,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+              }}
+            >
+              <Typography component="h1" variant="h5">
+                Upload Equipment Image
+              </Typography>
+              <form onSubmit={uploadEquipmentImageFormik.handleSubmit} noValidate sx={{ mt: 1 }} style={{
+                width: 400,
+              }}>
+                <Input
+                  fullWidth
+                  id="file"
+                  type="file"
+                  name="image"
+                  accept="image/*"
+                  onChange={(e, value) => {
+                    uploadEquipmentImageFormik.setFieldValue('image', e.currentTarget.files[0]);
+                  }}
+                />
+
+                <Button
+                  type="submit"
+                  fullWidth
+                  variant="contained"
+                  sx={{ mt: 3, mb: 2 }}
+                  disabled={uploadEquipmentImageFormik.isSubmitting}
+                >
+                  Submit
+                </Button>
+              </form>
+            </Box>
+          </Container>
+        </Dialog>
+
+
       </Container>
 
-      <Dialog open={editOpen} onClose={handleEditClose}>
 
-        {/* edit user form */}
-        <Container component="main" maxWidth="xs">
-          <CssBaseline />
-          <Box
-            sx={{
-              marginTop: 8,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-            }}
-          >
-            <Typography component="h1" variant="h5">
-              Edit Form
-            </Typography>
-            <form onSubmit={editUserFormik.handleSubmit} noValidate sx={{ mt: 1 }} style={{
-                    width: 400,
-                  }}>
-              <TextField
-                margin="normal"
-                required
-                fullWidth
-                id="equipment_name"
-                label="Equipment Name"
-                name="equipment_name"
-                autoComplete="equipment_name"
-                value={editUserFormik.values.equipment_name}
-                onChange={editUserFormik.handleChange}
-                error={editUserFormik.touched.equipment_name && Boolean(editUserFormik.errors.equipment_name)}
-                helperText={editUserFormik.touched.equipment_name && editUserFormik.errors.equipment_name}
-              />
-              <TextField
-                margin="normal"
-                fullWidth
-                name="equipment_code"
-                label="Equipment Code"
-                type="equipment_code"
-                id="equipment_code"
-                autoComplete="current-equipment_code"
-                value={editUserFormik.values.equipment_code}
-                onChange={editUserFormik.handleChange}
-                error={editUserFormik.touched.equipment_code && Boolean(editUserFormik.errors.equipment_code)}
-                helperText={editUserFormik.touched.equipment_code && editUserFormik.errors.equipment_code}
-              />
-              <Autocomplete
-                id="room"
-                name="room"
-                required
-                value={editUserFormik.values.room}
-                isOptionEqualToValue={(option, value) => option.id === value.id}
-                options={roomList}
-                getOptionLabel={(option) => option.room_name}
-                onChange={(e, value) => {
-                  editUserFormik.setFieldValue('room', value);
-                }}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    fullWidth
-                    label="Room"
-                    margin="normal"
-                    error={editUserFormik.touched.room && Boolean(editUserFormik.errors.room)}
-                    helperText={editUserFormik.touched.room && editUserFormik.errors.room}
-                  />
-                )}
-              />
-              <Button
-                type="submit"
-                fullWidth
-                variant="contained"
-                sx={{ mt: 3, mb: 2 }}
-                disabled={editUserFormik.isSubmitting}
-              >
-                Submit
-              </Button>
-            </form>
-          </Box>
-        </Container>
-      </Dialog>
+
+
+
     </Page>
   );
 }
