@@ -177,11 +177,11 @@ export default function Record() {
   }
 
   // disable answer
-  const handleDisableAnswer = async (id) => {
-    await disableAnswer(id)
-    await loadAnswerList()
-    handleElClose();
-  };
+  // const handleDisableAnswer = async (id) => {
+  //   await disableAnswer(id)
+  //   await loadAnswerList()
+  //   handleElClose();
+  // };
 
   const [createRecordInit, setCreateRecordInit] = useState({
     created_by: {},
@@ -396,7 +396,7 @@ export default function Record() {
                           transformOrigin={{ vertical: 'top', horizontal: 'right' }}
 
                         >
-                          {answerStatus
+                          {/* {answerStatus
                             ?
                             <MenuItem sx={{ color: 'text.secondary' }} onClick={() => { handleDisableAnswer(row.id) }}>
                               <ListItemIcon>
@@ -411,7 +411,7 @@ export default function Record() {
                               </ListItemIcon>
                               <ListItemText primary="Active" primaryTypographyProps={{ variant: 'body2' }} />
                             </MenuItem>
-                          }
+                          } */}
                           {/* <MenuItem sx={{ color: 'text.secondary' }} onClick={() => { handleEditClick(row.id) }}>
                             <ListItemIcon>
                               <Icon icon={editFill} width={24} height={24} />

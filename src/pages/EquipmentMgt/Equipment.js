@@ -6,10 +6,11 @@ import plusFill from '@iconify/icons-eva/plus-fill';
 import editFill from '@iconify/icons-eva/edit-fill';
 import eyeOffFIll from '@iconify/icons-eva/eye-off-fill';
 import eyeFIll from '@iconify/icons-eva/eye-fill';
+import arrowRightFill from '@iconify/icons-eva/arrow-right-fill';
 // mui
 import {
   Button, Card, Container, Stack, Table, TableBody, TableCell, TableContainer, TablePagination, TableRow, Typography, IconButton, Menu, MenuItem, ListItemIcon, ListItemText,
-  Dialog, TextField, Box, CssBaseline, Autocomplete, Input
+  Dialog, TextField, Box, CssBaseline, Autocomplete, Input, ButtonGroup
 } from '@mui/material';
 // react
 import { useEffect, useState } from 'react';
@@ -17,7 +18,7 @@ import { useEffect, useState } from 'react';
 import Page from 'src/components/Page';
 // api
 import { getRooms } from 'src/services/room.context';
-import { getEquipments, checkEquipment, activeEquipment, disableEquipment, createEquipment, updateEquipment, deleteEquipment, uploadEquipmentImage } from 'src/services/equipment.context';
+import { getEquipments, checkEquipment, activeEquipment, disableEquipment, createEquipment, updateEquipment, deleteEquipment, uploadEquipmentImage, trianModel } from 'src/services/equipment.context';
 import Label from 'src/components/Label';
 import EnhancedTableHead from 'src/components/EnchancedTableHead';
 import { filter } from 'lodash';
@@ -297,7 +298,10 @@ export default function Equipment() {
   }
 
 
+  const handleTraining = async () => {
+    await trianModel();
 
+  }
 
 
   // edit equipment form
@@ -344,13 +348,27 @@ export default function Equipment() {
           <Typography variant="h4" gutterBottom>
             Equipment
           </Typography>
-          <Button
-            variant="contained"
-            onClick={handleAddClick}
-            startIcon={<Icon icon={plusFill} />}
-          >
-            New Equipment
-          </Button>
+          <ButtonGroup>
+            <Button
+              sx={{ marginRight: 2 }}
+              variant="contained"
+              onClick={handleTraining}
+              startIcon={<Icon icon={arrowRightFill} />}
+
+            >
+              Training
+            </Button>
+
+            <Button
+              sx={{ marginLeft: 2 }}
+              variant="contained"
+              onClick={handleAddClick}
+              startIcon={<Icon icon={plusFill} />}
+            >
+              New Equipment
+            </Button>
+          </ButtonGroup>
+
         </Stack>
 
         {/* main */}

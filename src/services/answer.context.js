@@ -59,14 +59,8 @@ export const createAnswer = (answer_text, form, created_by, question, image) => 
       .post('answer/', formData, config)
   )
 }
-// export const updateAnswer = (id, question_text,) => {
-//   return (
-//     axiosInstance
-//       .put('answer/' + id + '/', {
-//         question_text: question_text
-//       })
-//   )
-// }
+
+
 export const deleteAnswer = (id) => {
   return (
     axiosInstance

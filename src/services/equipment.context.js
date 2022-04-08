@@ -68,3 +68,9 @@ export const uploadEquipmentImage = (id, image) => {
     axiosInstance.post('equipmentImage/', formData, config)
   )
 }
+
+export const trianModel = () => {
+  return (
+    axiosInstance.post('training/')
+  )
+}
