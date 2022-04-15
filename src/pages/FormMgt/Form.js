@@ -96,7 +96,7 @@ export default function Form() {
   const TABLE_HEAD = [
     { id: 'form_name', label: 'Form Name', alignRight: false },
     { id: 'created_by', label: 'Created by', alignRight: false },
-    { id: 'equipment', label: 'Equipment', alignRight: false },
+    // { id: 'equipment', label: 'Equipment', alignRight: false },
     { id: 'is_active', label: 'Status', alignRight: false },
     { id: '' }
   ];
@@ -393,7 +393,7 @@ export default function Form() {
                         </Stack>
                       </TableCell>
                       <TableCell align="left">{row.created_by.username}</TableCell>
-                      <TableCell align="left">{row.equipments[0]["equipment_name"]}</TableCell>
+                      {/* <TableCell align="left">{row.equipments[0]["equipment_name"]}</TableCell> */}
                       <TableCell align="left">
                         <Label
                           variant="ghost"
