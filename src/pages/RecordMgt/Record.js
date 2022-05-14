@@ -199,6 +199,7 @@ export default function Record() {
     }
 
     setCreateRecordInit({
+
       created_by: user,
     })
     setUploadImageButton(false)
@@ -322,13 +323,13 @@ export default function Record() {
           <Typography variant="h4" gutterBottom>
             Record
           </Typography>
-          <Button
+          {/* <Button
             variant="contained"
             onClick={handleAddClick}
             startIcon={<Icon icon={plusFill} />}
           >
             New Record
-          </Button>
+          </Button> */}
         </Stack>
         {/* main */}
         <Card>
